@@ -16,8 +16,10 @@ const app = express();
 app.use(express.static('public'));
 app.use(express.json());
 app.get('/telegram', (req, res) => {
-    res.render('telegram');
+    res.render('telegram'); 
 });
+
+
 
 app.use(cookieParser());
 const multer = require('multer');
@@ -126,7 +128,9 @@ app.get('/emails', async (req, res) => {
 
 
 const File = require('./models/file.js');
+
 app.post('/upload', upload.single('htmlFile'), async (req, res) => {
+
   const studentId = req.query.studentId;
   
   if (!req.file) {
@@ -183,6 +187,77 @@ app.get('/telegram/:studentId', async (req, res) => {
 
   res.render('telegram', { messages, error });
 });
+app.use(studentRoutes);
+
+const AudioFile = require('./models/audioFile');
+const audioStorage = multer.memoryStorage();
+const audioUpload = multer({
+  storage: audioStorage,
+  fileFilter: (req, file, cb) => {
+    // Accept audio files only
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed!'), false);
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10 MB limit
+  }
+});
+
+app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), (req, res) => {
+  const studentId = req.params.studentId;
+  console.log('Handling file upload for student:', studentId);
+
+  if (!req.file) {
+    console.log('No file uploaded');
+    return res.status(400).json({ message: 'No audio file uploaded.' });
+  }
+
+  const newAudioFile = new AudioFile({
+    filename: req.file.originalname,
+    contentType: req.file.mimetype,
+    data: req.file.buffer,
+    studentId: studentId
+  });
+
+  newAudioFile.save()
+    .then(() => {
+      console.log('File saved successfully');
+      res.status(200).json({ message: 'Audio file uploaded successfully!' });
+    })
+    .catch(error => {
+      console.error('Failed to save audio file:', error);
+      res.status(500).json({ message: 'Error uploading audio file: ' + error.message });
+    });
+});
+
+app.get('/audio/student/:studentId', async (req, res) => {
+  try {
+      const studentId = req.params.studentId;
+      const audioFile = await AudioFile.findOne({ studentId: studentId });
+      if (!audioFile) {
+          return res.status(404).send('Audio file not found.');
+      }
+
+      res.set('Content-Type', audioFile.contentType);
+      res.send(audioFile.data);
+  } catch (error) {
+      console.error('Failed to retrieve audio file:', error);
+      res.status(500).send('Error retrieving audio file.');
+  }
+});
+
+
+
+
+app.get('/audioVoice/:studentId', (req, res) => {
+  const studentId = req.params.studentId;
+  res.render('audioVoice', { studentId: studentId }); 
+});
+
+
 
 
 app.get('/', (req, res) => {
@@ -190,7 +265,7 @@ app.get('/', (req, res) => {
   res.render(createPath('index'), { title });
 });
 
-app.use(studentRoutes);
+
 
 app.use((req, res) => {
   const title = 'Error Page';
