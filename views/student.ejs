@@ -1,79 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"> <!-- Include Font Awesome -->
-
-    <link rel="stylesheet" href="/styles.css">
-    <style>
-  
-  @media (max-width: 1000px) {
-        .btn-group {
-          flex-direction: column;
-          align-items: center; /* Center buttons vertically */
-        }
-
-        .btn-group .btn {
-          width: 100%;
-          margin-bottom: 10px;
-          height: 50px;
-          border-radius: 0; /* Remove rounded corners */
-        }
-      }
-    </style>
-  </head>
-  
-  <body>
-    <%- include('./partials/nav.ejs') %>
-    <div class="container mt-5">
-      <article class="post card">
-        <div class="card-body">
-          <div class="info mb-4">
-            <h4 class="card-title">Студент: <%= student.surname %> <%= student.name %> <%= student.patronymic %></h4>
-            <h6 class="card-subtitle mb-2 text-muted"><span><%= student.createdAt.toLocaleDateString() || 'No date' %></span></h6>
-          </div>
-          <p><strong>Номер телефону:</strong> <%= student.phone %></p>
-          <p><strong>Email:</strong> <%= student.email %></p>
-          <p><strong>Група:</strong> <%= student.group %></p>
-          <p><strong>Курс:</strong> <%= student.course %></p>
-          <p><strong>Кількість н/a за семестр:</strong> <%= student.certifications %></p>
-          <div class="btn-group d-flex" role="group" aria-label="Student actions">
-            <button onclick="window.location.href='/edit/<%= student.id %>'" class="btn btn-bor">
-              <i class="fas fa-edit"></i> Редагувати
-            </button>
-            <button class="btn btn-bor btn-de" onclick="deleteStudent('<%= student.id %>')">
-              <i class="fas fa-trash-alt"></i> Видалити
-            </button>
-            <button onclick="fetchEmail('<%= student.email %>')" class="btn btn-bor">
-              <i class="fas fa-envelope"></i> Історія комунікацій через Gmail
-            </button>
-            <button onclick="window.location.href='/telegram/<%= student.id %>'" class="btn btn-bor">
-              <i class="fas fa-paper-plane"></i> Історія комунікацій у Telegram
-            </button>
-            <button onclick="window.location.href='/audioVoice/<%= student.id %>'" class="btn btn-bor">
-              <i class="fas fa-microphone"></i> Історія телефонних розмов
-            </button>
-          </div>
+<head>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+  <%- include('./partials/nav.ejs') %>
+  <div class="container mt-5">
+    <article class="post card">
+      <div class="card-body">
+        <div class="info mb-4">
+          <h4 class="card-title">Студент: <%= student.surname %> <%= student.name %> <%= student.patronymic %></h4>
+          <h6 class="card-subtitle mb-2 text-muted"><span><%= student.createdAt.toLocaleDateString() || 'No date' %></span></h6>
         </div>
-      </article>
+        <p><strong>Номер телефону:</strong> <%= student.phone %></p>
+        <p><strong>Email:</strong> <%= student.email %></p>
+        <p><strong>Група:</strong> <%= student.group %></p>
+        <p><strong>Курс:</strong> <%= student.course %></p>
+        <p><strong>Кількість н/a за семестр:</strong> <%= student.certifications %></p>
+        <div class="btn-group d-flex" role="group" aria-label="Student actions">         
+              <button onclick="fetchEmail('<%= student.id %>')" class="btn btn-bor">
+                <div class="btn-content">
+                  <i class="fas fa-envelope"></i> Історія комунікацій через Gmail
+                </div>
+              </button>         
+              <button onclick="window.location.href='/telegram/<%= student.id %>'" class="btn btn-bor">
+                <div class="btn-content">
+                  <i class="fas fa-paper-plane"></i> Історія комунікацій у Telegram                 
+                </div>
+              </button>            
+              <button onclick="window.location.href='/audioVoice/<%= student.id %>'" class="btn btn-bor">
+                <div class="btn-content">
+                  <i class="fas fa-microphone"></i> Історія телефонних розмов
+                </div>
+              </button>                   
+          <button onclick="window.location.href='/edit/<%= student.id %>'" class="btn btn-bor">
+            <i class="fas fa-edit"></i> Редагувати
+          </button>
+          <button class="btn btn-bor btn-de" onclick="deleteStudent('<%= student.id %>')">
+            <i class="fas fa-trash-alt"></i> Видалити
+          </button>
+        </div>
+      </div>
+    </article>
+    <input type="text" id="searchInput" style="margin-top: 20px;" class="form-control" placeholder="Пошук за ключовими словами...">
+    <div class="history-item">
+      
+      <div class="history-header"><i class="fas fa-history"></i> Історія комунікацій у хронологічному порядку</div>
+      
+      <div class="history-content" id="historyContent">
+        <% combinedHistories.forEach(history => { %>
+          <% if (history.type === 'gmail') { %>
+            <div class="history-item telegram-item">
+              <div class="email-content">
+                <div>
+                  <i class="fas fa-envelope"></i>
+                  <strong>Дата:</strong> <%= history.date.toLocaleString("uk-UA") %>
+                </div>
+                <div>
+                  <strong>Тема:</strong> <%= history.payload.headers.find(header => header.name === 'Subject').value %>
+                </div>
+                <div>
+                  <strong>Від:</strong> <%= history.payload.headers.find(header => header.name === 'From').value %>
+                </div>
+                <div>
+                  <strong>Текст повідомлення:</strong> <%= history.snippet %>
+                </div>
+                <% if (history.attachments && history.attachments.length > 0) { %>
+                  <div class="attachments">
+                    <% history.attachments.forEach(attachment => { %>
+                      <div class="attachment">
+                        <img style="width: 400px; margin-right: 5px;" src="data:<%= attachment.mimeType %>;base64,<%= attachment.data %>" alt="<%= attachment.filename %>">
+                      </div>
+                    <% }); %>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% } else if (history.type === 'telegram') { %>
+            <div class="history-item telegram-item">
+              <div class="telegram-content">
+                <div>
+                  <i class="fas fa-paper-plane"></i>
+                  <strong><%= history.fromName %></strong> (<%= history.date.toLocaleString("uk-UA") %>):
+                </div>
+                <p><%= history.text %></p>
+                <% if (history.photos.length > 0) { %>
+                  <div>
+                    <% history.photos.forEach(photo => { %>
+                      <img src="<%= photo.src %>" alt="photo" style="width: 400px; margin-right: 5px;">
+                    <% }) %>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% } else if (history.type === 'audio') { %>
+            <div class="history-item audio-item">
+              <div class="audio-content">
+                <div>
+                  <i class="fas fa-microphone"></i>
+                  <strong>Дата:</strong> <%= history.date.toLocaleString("uk-UA") %>
+                </div>
+                <audio controls>
+                  <source src="/audio/<%= history._id %>" type="<%= history.contentType %>">
+                  Your browser does not support the audio element.
+                </audio>
+                <p><strong>Транскрипція:</strong> <%= history.transcription %></p>
+              </div>
+            </div>
+          <% } %>
+        <% }); %>
+      </div>
     </div>
+  </div>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener('click', (e) => {
+      if (e.target.dataset.id && e.target.closest('.btn-delete')) {
+        deleteStudent(e.target.dataset.id);
+      }
+    });
 
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <script>
-      document.addEventListener('click', (e) => {
-        if (e.target.dataset.id && e.target.closest('.btn-delete')) {
-          deleteStudent(e.target.dataset.id);
-        }
+    function deleteStudent(id) {
+      fetch(`/students/${id}`, { method: 'DELETE' })
+        .then(() => { window.location.href = '/students'; })
+        .catch(err => console.error('Error:', err));
+    }
+
+    function fetchEmail(id) {
+      window.location.href = `/emails/${id}`;
+    }
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      const searchText = this.value.toLowerCase();
+      const historyItems = document.querySelectorAll('.history-item');
+      historyItems.forEach(item => {
+        const itemText = item.textContent.toLowerCase();
+        item.style.display = itemText.includes(searchText) ? '' : 'none';
       });
-
-      function deleteStudent(id) {
-        fetch(`/students/${id}`, { method: 'DELETE' })
-          .then(() => { window.location.href = '/students'; })
-          .catch(err => console.error('Error:', err));
-      }
-
-      function fetchEmail(email) {
-        window.location.href = `/emails?email=${email}`;
-      }
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>

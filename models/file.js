@@ -12,7 +12,7 @@ const fileSchema = new Schema({
   },
   fileType: {
     type: String,
-    enum: ['html', 'photo'],
+    enum: ['json', 'photo'],
     required: true
   }
 });

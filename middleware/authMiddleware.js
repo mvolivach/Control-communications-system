@@ -11,7 +11,7 @@ const requireAuth = (req, res, next) => {
         console.log(err.message);
         res.redirect('/login');
       } else {
-        req.user = { _id: decodedToken.id }; // Встановлюємо ID користувача у запиті
+        req.user = { _id: decodedToken.id };
         next();
       }
     });
@@ -31,7 +31,7 @@ const checkUser = (req, res, next) => {
       } else {
         let user = await User.findById(decodedToken.id);
         res.locals.user = user;
-        req.user = user; // Встановлюємо об'єкт користувача у запиті
+        req.user = user;
         next();
       }
     });

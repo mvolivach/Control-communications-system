@@ -13,6 +13,9 @@ const {
   deleteReminder,
   addReminder,
   toggleCompleteReminder,
+  archiveGroup,
+  unarchiveGroup,
+  addGroupReminder
 } = require('../controllers/studentController');
 const { requireAuth } = require('../middleware/authMiddleware');
 
@@ -30,6 +33,9 @@ router.get('/archived', requireAuth, getArchivedStudents);
 router.get('/students/:studentId/reminders', requireAuth, getReminders);
 router.delete('/students/:studentId/reminders/:id', requireAuth, deleteReminder);
 router.post('/students/:studentId/reminders/add', requireAuth, addReminder);
-router.put('/students/:studentId/reminders/:id', toggleCompleteReminder); // Add this line
+router.put('/students/:studentId/reminders/:id', toggleCompleteReminder);
+router.post('/students/archive-group/:group',requireAuth, archiveGroup);
+router.post('/students/unarchive-group/:group',requireAuth, unarchiveGroup);
+router.post('/add-group-reminder', requireAuth, addGroupReminder);
 
 module.exports = router;

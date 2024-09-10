@@ -6,14 +6,16 @@
   <title>Email History</title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
-
 </head>
 <body>
   <%- include('./partials/nav.ejs') %>
+  
   <div class="email-container">
-    <ul class="email-list">
+    <input type="text" id="searchInput" class="form-control" placeholder="Введіть ключові слова...">
+    <button id="refreshButton" class="btn btn-del">Оновити історію</button>
+    <ul class="email-list" id="emailList">
       <% messages.forEach(message => { %>
-        <li class="email-item common-container <%= message.payload.headers.find(header => header.name === 'From').value.includes('mvolivach2003@gmail.com') ? 'sent' : '' %>">
+        <li class="email-item common-container " data-index="<%= message.id %>">
           <div class="email-content">
             <div class="common-header">
               <span>Дата: <%= new Date(parseInt(message.internalDate)).toLocaleString() %></span>
@@ -37,5 +39,38 @@
       <% }); %>
     </ul>
   </div>
-</body>
+
+  <script>
+    function getEmailFromUrl() {
+      const url = window.location.href;
+      const emailFromPath = url.match(/\/emails\/([^\/?#]+)/);
+      const params = new URLSearchParams(window.location.search);
+      const emailFromQuery = params.get('email');
+
+      return emailFromPath ? decodeURIComponent(emailFromPath[1]) : emailFromQuery;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('searchInput');
+      const refreshButton = document.getElementById('refreshButton');
+      const emailAddress = getEmailFromUrl();
+
+      if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+          const searchText = this.value.toLowerCase();
+          const emails = document.querySelectorAll('.email-item');
+          emails.forEach(email => {
+            const text = email.querySelector('.common-body').textContent.toLowerCase();
+            email.style.display = text.includes(searchText) ? '' : 'none';
+          });
+        });
+      }
+
+      if (refreshButton && emailAddress) {
+        refreshButton.addEventListener('click', function() {
+          window.location.href = `/refresh-email-history/${emailAddress}`;
+        });
+      }
+    });
+</script>
 </html>

@@ -1,9 +1,8 @@
-// routes/emailRoutes.js
 const { Router } = require('express');
-const { getEmailHistory } = require('../controllers/emailController');
-
 const router = Router();
+const { getEmailHistory, refreshEmailHistory } = require('../controllers/emailController');
 
-router.get('/emails', getEmailHistory);
+router.get('/emails/:studentId', getEmailHistory);
+router.get('/refresh-email-history/:studentId', refreshEmailHistory);
 
 module.exports = router;

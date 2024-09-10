@@ -1,71 +1,86 @@
-// controllers/audioController.js
 const multer = require('multer');
 const mongoose = require('mongoose');
 const AudioFile = require('../models/audioFile');
 const speech = require('@google-cloud/speech');
-const { WaveFile } = require('wavefile');  // Додано для аналізу WAV файлів
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegStatic = require('ffmpeg-static');
+const { Readable, PassThrough } = require('stream');
+ffmpeg.setFfmpegPath(ffmpegStatic);
 
 const audioStorage = multer.memoryStorage();
 // Налаштування завантаження аудіофайлів
 const audioUpload = multer({
   storage: audioStorage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'audio/wav' || file.mimetype === 'audio/x-wav') {
-      cb(null, true);
-    } else {
-      cb(new Error('Лише файли WAV формату підтримуються!'), false);
-    }
-  },
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10 MB limit
+    fileSize: 10 * 1024 * 1024 
   }
 });
 
 const uploadAudio = audioUpload.single('audioFile');
 
-// Обробник завантаження аудіофайлу
+// Функція для конвертації аудіо до потрібного формату
+const convertAudioToWav = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const inputStream = new Readable();
+    inputStream.push(buffer);
+    inputStream.push(null); 
+
+    const outputStream = new PassThrough();
+    let chunks = [];
+
+    outputStream.on('data', (chunk) => {
+      chunks.push(chunk);
+    });
+
+    ffmpeg(inputStream)
+      .audioCodec('pcm_s16le')
+      .audioChannels(1)
+      .audioFrequency(16000)
+      .format('wav')
+      .on('error', (err) => reject(err))
+      .on('end', () => resolve(Buffer.concat(chunks)))
+      .pipe(outputStream);
+  });
+};
+
+// Змінена функція handleAudioUpload, що викликає convertAudioToWav без mimeType
 const handleAudioUpload = async (req, res) => {
-    const studentId = req.params.studentId;
-  
-    if (!req.file) {
-      return res.status(400).send({ error: 'Не завантажено жодного аудіо!', code: 400 });
-    }
-  
-    try {
-      const wav = new WaveFile(req.file.buffer);
-      if (wav.fmt.sampleRate !== 16000) {
-        return res.status(400).send({ error: 'Тільки файли з частотою 16000 Hz та моноканалом дозволені! Щоб отримати файл відповідного формату перейдіть за наступним посиланням та відформатуйте свій файл: https://fconvert.com/audio/', code: 400 });
-      }
-  
-      const client = new speech.SpeechClient();
-  
-      const audio = { content: req.file.buffer.toString('base64') };
-      const config = {
-        encoding: 'LINEAR16',
-        sampleRateHertz: 16000,
-        languageCode: 'uk-UA',
-        enableAutomaticPunctuation: true,
-      };
-      const request = { audio: audio, config: config };
-  
-      const [response] = await client.recognize(request);
-      const transcription = response.results.map(result => result.alternatives[0].transcript).join('\n');
-  
-      const newAudioFile = new AudioFile({
-        filename: req.file.originalname,
-        contentType: req.file.mimetype,
-        data: req.file.buffer,
-        studentId: studentId,
-        transcription: transcription
-      });
-  
-      await newAudioFile.save();
-      res.redirect(`/audioVoice/${studentId}`);
-    } catch (error) {
-      console.error('Помилка при завантаженні або транскрипції:', error);
-      res.status(500).send({ error: error.message, code: 500 });
-    }
-  };
+  const studentId = req.params.studentId;
+
+  if (!req.file) {
+    return res.status(400).send({ error: 'Не завантажено жодного аудіо!', code: 400 });
+  }
+
+  try {
+    const convertedBuffer = await convertAudioToWav(req.file.buffer);
+
+    const client = new speech.SpeechClient();
+    const audio = { content: convertedBuffer.toString('base64') };
+    const config = {
+      encoding: 'LINEAR16',
+      sampleRateHertz: 16000,
+      languageCode: 'uk-UA',
+      enableAutomaticPunctuation: true,
+    };
+    const request = { audio: audio, config: config };
+
+    const [response] = await client.recognize(request);
+    const transcription = response.results.map(result => result.alternatives[0].transcript).join('\n');
+
+    const newAudioFile = new AudioFile({
+      filename: req.file.originalname,
+      contentType: 'audio/wav',
+      data: convertedBuffer,
+      studentId: studentId,
+      transcription: transcription
+    });
+
+    await newAudioFile.save();
+    res.redirect(`/audioVoice/${studentId}`);
+  } catch (error) {
+    console.error('Помилка при завантаженні або транскрипції:', error);
+  }
+};
 
   
 // Отримання конкретного аудіофайлу за ID
@@ -75,14 +90,13 @@ const getAudioFile = async (req, res) => {
     const audioFile = await AudioFile.findById(audioId);
 
     if (!audioFile) {
-      return res.status(404).send('Audio file not found.');
+      return res.status(404).send('Аудіофайл не знайдено');
     }
-
     res.set('Content-Type', audioFile.contentType);
     res.send(audioFile.data);
   } catch (error) {
-    console.error('Failed to retrieve the audio file:', error);
-    res.status(500).send('Error retrieving the audio file.');
+    console.error('Помилка отримання файла', error);
+    res.status(500).send('Помилка отримання файла');
   }
 };
 
@@ -91,10 +105,10 @@ const getAudioFilesByStudent = async (req, res) => {
     const studentId = req.params.studentId;
     try {
       const audioFiles = await AudioFile.find({ studentId: studentId });
-      if (req.query.audioId) {  // Перевірка чи є запит на конкретний аудіофайл
+      if (req.query.audioId) { 
         const audioFile = audioFiles.find(file => file._id.toString() === req.query.audioId);
         if (!audioFile) {
-          return res.status(404).send('Audio file not found.');
+          return res.status(404).send('Аудіофайл не знайдено');
         }
         res.set('Content-Type', 'audio/wav');
         res.send(audioFile.data);
@@ -103,18 +117,18 @@ const getAudioFilesByStudent = async (req, res) => {
           return res.render('audioVoice', {
             studentId: studentId,
             audios: [],
-            message: 'No audio files found.'
+            message: 'Аудіофайли не знайдено'
           });
         }
         res.render('audioVoice', {
           studentId: studentId,
           audios: audioFiles,
-          message: 'Audio files loaded.'
+          message: 'Аудіофайли завантажено'
         });
       }
     } catch (error) {
-      console.error('Error retrieving audio files:', error);
-      res.status(500).send('Error retrieving audio files.');
+      console.error('Помилка отримання файла', error);
+      res.status(500).send('Помилка отримання файла');
     }
   };
   
@@ -125,13 +139,13 @@ const deleteAudioFile = async (req, res) => {
     const deletedAudio = await AudioFile.findByIdAndDelete(audioId);
 
     if (!deletedAudio) {
-      return res.status(404).send({ message: 'Audio file not found.' });
+      return res.status(404).send({ message: 'Аудіофайл не знайдено' });
     }
 
-    res.send({ message: 'Audio file deleted successfully.' });
+    res.send({ message: 'Аудіофайл видалено' });
   } catch (error) {
-    console.error('Failed to delete the audio file:', error);
-    res.status(500).send({ message: 'Error deleting the audio file.' });
+    console.error('Помилка при видаленні', error);
+    res.status(500).send({ message: 'Помилка при видаленні' });
   }
 };
 

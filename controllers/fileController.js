@@ -1,4 +1,4 @@
-// fileController.js
+
 const File = require('../models/file');
 
 const getPhoto = async (req, res) => {

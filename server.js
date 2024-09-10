@@ -31,7 +31,7 @@ app.use(fileRoutes);
 
 
 mongoose
-  .connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+  .connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true})
   .then(() => console.log('Connected to DB'))
   .catch((error) => console.log(error));
 
@@ -42,13 +42,14 @@ app.listen(process.env.PORT, (error) => {
 app.get('*', checkUser);
 app.get('/', (req, res) => res.render('index'));
 
-// Use the routes
 app.use(authRoutes);
 app.use(emailRoutes);
 app.use(telegramRoutes);
 app.use(reminderRoutes);
 app.use(studentRoutes);
 app.use(audioRoutes);
+
+
 
 app.get('/', (req, res) => {
   const title = 'Home';

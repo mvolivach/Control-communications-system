@@ -127,9 +127,18 @@ module.exports.login_post = async (req, res) => {
 }
 
 module.exports.logout_get = (req, res) => {
+  const filePath = path.join(__dirname, '..', 'token.json');
   
-  res.cookie('jwt', '', { maxAge: 1 });
-  res.redirect('/');
+  // Видалення файлу токену
+  fs.unlink(filePath, (err) => {
+    if (err && err.code !== 'ENOENT') { 
+      console.error("Помилка при видаленні файлу token.json:", err);
+      return res.status(500).send("Помилка при виході з системи");
+    }
+
+    res.cookie('jwt', '', { maxAge: 1 });
+    res.redirect('/');
+  });
 }
 
 module.exports.checkUser = checkUser;

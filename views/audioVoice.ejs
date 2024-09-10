@@ -5,36 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Завантажити аудіозапис телефонної розмови</title>
   <link rel="stylesheet" href="/styles.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<%- include('./partials/nav.ejs') %>
+  <%- include('./partials/nav.ejs') %>
   <div class="container">
     <h1>Завантажити аудіозапис телефонної розмови</h1>
     <form class=".common-container" id="uploadForm" action="/upload-audio/<%= studentId %>" method="post" enctype="multipart/form-data">
-        <input type="file" name="audioFile" accept="audio/wav" id="audioFileInput" required>
-        <button class="btn btn-del" type="submit" id="submitBtn" disabled>Завантажити запис</button>
+        <input class="form-control mb-3" type="file" name="audioFile" accept="audio/*" id="audioFileInput" required>
+        <button class="btn btn-del" type="submit" id="submitBtn">Завантажити запис</button>
     </form>
-
+    <h2>Пошук за ключовими словами:</h2>
+    
+      <input type="text" id="searchInput" class="form-control" placeholder="Введіть ключові слова...">
+    
     <% if (audios && audios.length > 0) { %>
+      <div class="audio-list" id="audioList">
         <% audios.forEach(function(audio) { %>
-            <div class="audio-container">
+            <div class="audio-container" data-transcription="<%= audio.transcription.toLowerCase() %>">
               <div class="audio-player-container">
                 <audio controls>
                     <source src="/audioVoice/<%= studentId %>?audioId=<%= audio._id %>" type="audio/wav">
-
                   Your browser does not support the audio element.
                 </audio>
               </div>
               <div class="transcription-container">
                 <h2>Транскрипція</h2>
                 <p><%= audio.transcription %></p>
-                <span>Завантажено: <%= new Date(audio.createdAt).toLocaleDateString("uk-UA") %></span>
+                <span>Дата створення запису: <%= new Date(audio.createdAt).toLocaleString("uk-UA") %></span>
               </div>
               <div class="button-container">
                 <button onclick="deleteAudio('<%= audio._id %>')" class="btn btn-del">Видалити запис</button>
               </div>
             </div>
           <% }); %>
+      </div>
     <% } else { %>
       <p class="p-center">Не знайдено жодного запису</p>
     <% } %>
@@ -56,32 +61,35 @@
         const file = this.files[0];
         const submitBtn = document.getElementById('submitBtn');
 
-        if (file && file.type === 'audio/wav') {
-            // Ваша додаткова логіка для перевірки частоти дискретизації може бути додана тут, але її потрібно робити на сервері
-            submitBtn.disabled = false;
-        } else {
-            submitBtn.disabled = true;
-            alert('Тільки аудіофайли формату WAV дозволені.');
-        }
+        submitBtn.disabled = !file;
+    });
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      const searchText = this.value.toLowerCase();
+      const audioContainers = document.querySelectorAll('.audio-container');
+      audioContainers.forEach(container => {
+        const transcription = container.getAttribute('data-transcription');
+        container.style.display = transcription.includes(searchText) ? '' : 'none';
+      });
     });
 
     document.getElementById('uploadForm').addEventListener('submit', function(event) {
-  event.preventDefault(); // Stop the form from submitting normally
-  const formData = new FormData(this);
-  fetch(this.action, {
-      method: 'POST',
-      body: formData,
-  })
-  .then(response => response.json())
-  .then(data => {
-      if (data.code === 400) {
-          alert(data.error);
-      } else {
-          console.log('Success:', data);
-          alert('Файл завантажено!');
-          window.location.reload();
-      }
-  })
+        event.preventDefault(); 
+        const formData = new FormData(this);
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.code === 400) {
+                alert(data.error);
+            } else {
+                console.log('Success:', data);
+                alert('Файл завантажено!');
+                window.location.reload();
+            }
+        })
         .catch(data => {
             window.location.reload();;
         });

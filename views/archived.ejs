@@ -7,11 +7,16 @@
 <body>
   <%- include('./partials/nav.ejs') %>
   <div class="container mt-5">
+    <h2>Пошук за ключовими словами:</h2>
+      <form id="searchForm" class="mb-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="Введіть ключові слова...">
+      </form>
+
     <h1>Студенти:</h1>
-    <ul class="list-unstyled">
+    <ul class="list-unstyled" id="studentList">
       <% if (students.length) { %>
         <% students.forEach(({ _id, surname, createdAt, name, patronymic, phone, email, group, course, certifications, isArchived }) => { %>
-          <li >
+          <li class="student-item" data-surname="<%= surname %>" data-name="<%= name %>" data-patronymic="<%= patronymic %>" data-phone="<%= phone %>" data-email="<%= email %>" data-group="<%= group %>" data-course="<%= course %>" data-certifications="<%= certifications %>" data-createdat="<%= new Date(createdAt).toLocaleDateString() %>">
             <div class="cont">
               <h5 class="card-title">
                 <a href="/students/<%= _id %>" class="text-decoration-none"><%= surname %> <%= name %> <%= patronymic %></a>
@@ -23,11 +28,18 @@
               <p class="card-text"><strong>Кількість н/а за семестр:</strong> <%= certifications %></p>
               <div class="info"><span>Додано: <%= new Date(createdAt).toLocaleDateString() %></span></div>
                 
-                
                 <button class="btn-delete btn btn-del" data-id="<%= _id %>">
                   Видалити
                 </button>
-                  <button onclick="toggleArchive('<%= _id %>')" class="btn btn-del">Розархівувати</button>               
+                <div class="dropdown mt-3">
+                  <button class="btn btn-del dropdown-toggle" type="button" id="groupDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Розархівувати
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="groupDropdown">
+                    <li><a class="dropdown-item" href="#" onclick="toggleArchive('<%= _id %>')" class="btn btn-del">Розрхівувати даний запис</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="unarchiveGroup('<%= group %>')">Розархівувати усю групу</a></li>
+                  </ul>
+                </div>         
               </div>
             </div>
           </li>
@@ -39,6 +51,15 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      const searchText = this.value.toLowerCase();
+      const studentItems = document.querySelectorAll('.student-item');
+      studentItems.forEach(item => {
+        const text = (item.dataset.surname + ' ' + item.dataset.name + ' ' + item.dataset.patronymic + ' ' + item.dataset.phone + ' ' + item.dataset.email + ' ' + item.dataset.group + ' ' + item.dataset.course + ' ' + item.dataset.certifications + ' ' + item.dataset.createdat).toLowerCase();
+        item.style.display = text.includes(searchText) ? '' : 'none';
+      });
+    });
+
     // Обробка кліку по кнопці видалення студента
     document.addEventListener('click', (e) => {
       const id = e.target?.dataset?.id || null;
@@ -61,6 +82,26 @@
         window.location.reload();
       }).catch(err => console.error('Error toggling archive status:', err));
     }
+
+    function unarchiveGroup(groupName) {
+    fetch(`/students/unarchive-group/${groupName}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.reload();  
+        } else {
+            alert('Failed to unarchive group.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error unarchiving group.');
+    });
+}
   </script>
 </body>
 </html>

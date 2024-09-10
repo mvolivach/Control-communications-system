@@ -1,32 +1,24 @@
-// controllers/emailController.js
 const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs').promises;
 const { authenticate } = require('@google-cloud/local-auth');
 const mongoose = require('mongoose');
+const EmailHistory = require('../models/emailHistory');
+const Student = require('../models/student');
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+const TOKEN_PATH = path.join(process.cwd(), 'token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 
-const Token = mongoose.model('Token', new mongoose.Schema({
-  data: String
-}));
-
-// Завантаження збережених облікових даних з бази даних
 async function loadSavedCredentialsIfExist() {
   try {
-    const tokenDoc = await Token.findOne();
-    if (tokenDoc) {
-      const credentials = JSON.parse(tokenDoc.data);
-      return google.auth.fromJSON(credentials);
-    }
-    return null;
+    const content = await fs.readFile(TOKEN_PATH);
+    const credentials = JSON.parse(content);
+    return google.auth.fromJSON(credentials);
   } catch (err) {
-    console.error('Error loading saved credentials from DB:', err);
     return null;
   }
 }
 
-// Збереження облікових даних користувача в базу даних
 async function saveCredentials(client) {
   const content = await fs.readFile(CREDENTIALS_PATH);
   const keys = JSON.parse(content);
@@ -37,15 +29,9 @@ async function saveCredentials(client) {
     client_secret: key.client_secret,
     refresh_token: client.credentials.refresh_token,
   });
-
-  try {
-    await Token.updateOne({}, { data: payload }, { upsert: true });
-  } catch (err) {
-    console.error('Error saving credentials to DB:', err);
-  }
+  await fs.writeFile(TOKEN_PATH, payload);
 }
 
-// Авторизація користувача
 async function authorize() {
   let client = await loadSavedCredentialsIfExist();
   if (!client) {
@@ -60,7 +46,6 @@ async function authorize() {
   return client;
 }
 
-// Отримання вкладень з повідомлення
 async function getAttachments(gmail, messageId, part) {
   const attachmentId = part.body.attachmentId;
   const response = await gmail.users.messages.attachments.get({
@@ -72,12 +57,25 @@ async function getAttachments(gmail, messageId, part) {
   return Buffer.from(data, 'base64').toString('base64');
 }
 
-// Отримання історії листування по email
 const getEmailHistory = async (req, res) => {
-  const userEmail = req.query.email;
-  const auth = await authorize();
-  const gmail = google.gmail({ version: 'v1', auth });
+  const studentId = req.params.studentId;
+
+  const student = await Student.findById(studentId);
+  if (!student) {
+    return res.status(404).send('Student not found');
+  }
+
+  const userEmail = student.email;
+
+  let emailHistory = await EmailHistory.findOne({ studentId });
+
+  if (emailHistory) {
+    return res.render('messages', { messages: emailHistory.messages });
+  }
+
   try {
+    const auth = await authorize();
+    const gmail = google.gmail({ version: 'v1', auth });
     const response = await gmail.users.threads.list({
       'userId': 'me',
       'q': `to:${userEmail} OR from:${userEmail}`,
@@ -103,6 +101,8 @@ const getEmailHistory = async (req, res) => {
       messages.push(...threadResponse.data.messages);
     }
     messages.sort((a, b) => a.internalDate - b.internalDate);
+
+    await EmailHistory.create({ studentId, userEmail, messages });
     res.render('messages', { messages });
   } catch (err) {
     console.error('The API returned an error: ' + err);
@@ -110,6 +110,16 @@ const getEmailHistory = async (req, res) => {
   }
 };
 
+const refreshEmailHistory = async (req, res) => {
+  const studentId = req.params.studentId;
+
+  await EmailHistory.deleteOne({ studentId });
+
+  await getEmailHistory(req, res);
+  
+};
+
 module.exports = {
-  getEmailHistory
+  getEmailHistory,
+  refreshEmailHistory
 };

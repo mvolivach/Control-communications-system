@@ -1,26 +1,25 @@
-// controllers/reminderController.js
 const Reminder = require('../models/reminders');
 
 // Метод для отримання нагадувань студента за його ID
 const getReminders = async (req, res) => {
   try {
-    const studentId = req.params.studentId; // Отримуємо ID студента з параметрів запиту
-    const reminders = await Reminder.find({ studentId }).sort({ reminderDate: 1 }); // Знаходимо всі нагадування для даного студента та сортуємо їх за датою
-    res.render('reminders', { reminders, studentId }); // Відображаємо нагадування на сторінці
+    const studentId = req.params.studentId; 
+    const reminders = await Reminder.find({ studentId }).sort({ reminderDate: 1 }); 
+    res.render('reminders', { reminders, studentId });
   } catch (error) {
-    res.status(500).send('Error retrieving reminders'); // Відправляємо повідомлення про помилку у разі невдачі
+    res.status(500).send('Error retrieving reminders');
   }
 };
 
 // Метод для додавання нового нагадування
 const addReminder = async (req, res) => {
-  const { studentId, description, reminderDate } = req.body; // Отримуємо дані з тіла запиту
+  const { studentId, description, reminderDate } = req.body; 
   try {
-    const newReminder = new Reminder({ studentId, description, reminderDate }); // Створюємо новий об'єкт нагадування
-    await newReminder.save(); // Зберігаємо нове нагадування у базу даних
-    res.redirect(`/reminders/${studentId}`); // Переадресовуємо на сторінку нагадувань для даного студента
+    const newReminder = new Reminder({ studentId, description, reminderDate });
+    await newReminder.save(); 
+    res.redirect(`/reminders/${studentId}`); 
   } catch (error) {
-    res.status(500).send('Error saving reminder'); // Відправляємо повідомлення про помилку у разі невдачі
+    res.status(500).send('Error saving reminder'); 
   }
 };
 

@@ -17,15 +17,20 @@
       <p class="teleg-help">Оберіть папку з історією листувань, яку отримали у застосунку Telegram</p>
       <button type="submit" class="btn btn-primary">Завантажити</button>
     </form>
-    
+    <button id="deleteHistory" class="btn btn-del mt-4">Видалити всю історію</button>
+    <h2>Пошук за ключовими словами:</h2>
+    <form id="searchForm" class="mb-4">
+      <input type="text" id="searchInput" class="form-control" placeholder="Введіть ключові слова...">
+    </form>
     <% if (typeof messages !== 'undefined' && messages.length > 0) { %>
+      
       <h2 class="mt-4" id="historyHeader">Історія листування</h2>
       <div id="messagesContainer" class="chat-container">
-        <% messages.forEach(function(message) { %>
-          <div class="email-item common-container">
+        <% messages.forEach(function(message, index) { %>
+          <div class="email-item common-container message-item" data-index="<%= index %>">
             <div class="common-header">
               <strong><%= message.fromName %></strong>
-              <span><%= message.date %></span>
+              <span><%= new Date(`${message.date.split('.').reverse().join('-')}T${message.time}`).toLocaleString() %></span>
             </div>
             <div class="common-body">
               <div><%= message.text %></div>
@@ -51,10 +56,8 @@
     document.getElementById('uploadForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const filesInput = document.getElementById('files');
-
       const pathArray = window.location.pathname.split('/');
       const studentId = pathArray[pathArray.length - 1];
-
       const formData = new FormData();
       for (let i = 0; i < filesInput.files.length; i++) {
         formData.append('files', filesInput.files[i]);
@@ -74,6 +77,30 @@
         }
       })
       .catch(error => console.error('Error uploading files:', error));
+    });
+
+    document.getElementById('deleteHistory').addEventListener('click', function() {
+      const studentId = window.location.pathname.split('/').pop();
+      fetch(`/delete-history/${studentId}`, {
+        method: 'DELETE',
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+        
+      })
+      
+      .catch(error => console.error('Error deleting history:', error));
+      window.location.reload();
+    });
+
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+      const searchText = this.value.toLowerCase();
+      const messages = document.querySelectorAll('.message-item');
+      messages.forEach(message => {
+        const text = message.querySelector('.common-body div').textContent.toLowerCase();
+        message.style.display = text.includes(searchText) ? '' : 'none';
+      });
     });
   </script>
 </body>
