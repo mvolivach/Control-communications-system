@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include('./partials/head.ejs') %>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
 <body>
   <%- include('./partials/nav.ejs') %>
   <div class="container mt-5">
@@ -9,7 +13,7 @@
     <form id="post-form" method="post" action="/add-student" class="row g-1" style="background-color: white; padding: 20px; border-radius: 10px; width: 100%;">
       <label for="surname" class="form-label">Прізвище</label>
       <div class="col-md-12">
-        
+        <input type="hidden" name="user" value="<%= user._id %>">
         <input type="text" class="form-control" id="surname" name="surname" required>
       </div>
       <label for="patronymic" class="form-label">По-батькові</label>
@@ -48,7 +52,7 @@
         <input type="number" class="form-control" id="certifications" name="certifications" required>
       </div>
       <div class="col-12">
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-del">Submit</button>
       </div>
     </form>
   </div>

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <%- include('./partials/head.ejs') %>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
   </head>
   <body>
@@ -12,7 +11,6 @@
         
         <label for="surname" class="form-label">Прізвище</label>
         <div class="col-md-12">
-          
           <input type="text" class="form-control" id="surname" name="surname" value="<%= student.surname %>" required>
         </div>
         <label for="patronymic" class="form-label">По-батькові</label>
@@ -51,7 +49,7 @@
           <input type="number" class="form-control" id="certifications" name="certifications" value="<%= student.certifications %>" required>
         </div>
         <div class="col-12">
-          <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+          <button type="submit" class="btn btn-del">Зберегти зміни</button>
         </div>
       </form>
     </div>

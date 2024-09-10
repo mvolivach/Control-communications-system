@@ -24,7 +24,7 @@
               <div class="info"><span>Додано: <%= new Date(createdAt).toLocaleDateString() %></span></div>
                 
                 
-                <button class="btn btn-del" data-id="<%= _id %>">
+                <button class="btn-delete btn btn-del" data-id="<%= _id %>">
                   Видалити
                 </button>
                   <button onclick="toggleArchive('<%= _id %>')" class="btn btn-del">Розархівувати</button>               

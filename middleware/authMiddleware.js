@@ -4,14 +4,13 @@ const User = require('../models/User');
 const requireAuth = (req, res, next) => {
   const token = req.cookies.jwt;
 
-  // check json web token exists & is verified
   if (token) {
     jwt.verify(token, 'net ninja secret', (err, decodedToken) => {
       if (err) {
         console.log(err.message);
         res.redirect('/login');
       } else {
-        console.log(decodedToken);
+        req.user = { _id: decodedToken.id }; // Set the user ID on the request
         next();
       }
     });
@@ -20,7 +19,7 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// check current user
+// Check current user
 const checkUser = (req, res, next) => {
   const token = req.cookies.jwt;
   if (token) {
@@ -31,6 +30,7 @@ const checkUser = (req, res, next) => {
       } else {
         let user = await User.findById(decodedToken.id);
         res.locals.user = user;
+        req.user = user; // Set the user object on the request
         next();
       }
     });
@@ -39,6 +39,5 @@ const checkUser = (req, res, next) => {
     next();
   }
 };
-
 
 module.exports = { requireAuth, checkUser };

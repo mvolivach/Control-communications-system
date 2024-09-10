@@ -1,26 +1,57 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<nav>
-  <ul class="nav-left">
-    <% if (user) { %>
-    <li><a href="/" class="btn" >На головний екран</a></li>
-    <li><a href="/students" class="btn">Студенти</a></li>
-    <li><a href="/add-student" class="btn">Додати студента</a></li>
-    <li><a href="/contacts" class="btn">Контакти</a></li>
-    <li><a href="/archived" class="btn">Архів</a></li>
-  </ul>
-  <ul class="nav-right">
-      <li><%= user.email %></li>
-      <li><a href="/logout" class="btn">Вийти з акаунта</a></li>
-    <% } else { %>
-      <li><a href="/login" class="btn">Увійти</a></li>
-      <li><a href="/signup" class="btn">Зареєструватися</a></li>
-    <% } %>
-  </ul>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav mr-auto">
+      <% if (user) { %>
+      <li class="nav-item">
+        <a class="nav-link" href="/">На головний екран</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/students">Студенти</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/add-student">Додати студента</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/contacts">Контакти</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/archived">Архів</a>
+      </li>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <span class="nav-link"><%= user.email %></span>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/logout">Вийти з акаунта</a>
+        </li>
+      <% } else { %>
+        <li class="nav-item">
+          <a class="nav-link" href="/login">Увійти</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/signup">Зареєструватися</a>
+        </li>
+      <% } %>
+    </ul>
+  </div>
 </nav>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -43,7 +43,16 @@ app.listen(PORT, (error) => {
   error ? console.log(error) : console.log(`listening port ${PORT}`);
 });
 
+app.use(express.urlencoded({ extended: false }));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+app.use(express.static('styles'));
+app.use(methodOverride('_method'));
 
+app.get('*', checkUser);
+app.get('/', (req, res) => res.render('index'));
+app.use(authRoutes);
+app.use(requireAuth);
+app.use(studentRoutes);
 
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
@@ -95,6 +104,8 @@ async function authorize() {
   return client;
 }
 
+
+
 app.get('/emails', async (req, res) => {
   const userEmail = req.query.email;
   const auth = await authorize();
@@ -136,23 +147,22 @@ app.post('/upload', upload.single('htmlFile'), async (req, res) => {
   }
 
   try {
-    // Validate the studentId
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
       return res.status(400).send('Invalid student ID.');
     }
 
-    // Create a new File instance with the studentId
+    await File.findOneAndDelete({ studentId: studentId });
+
     const newFile = new File({
       filename: req.file.originalname,
       contentType: req.file.mimetype,
       data: req.file.buffer,
-      studentId: studentId  // Associate the file with a student
+      studentId: studentId
     });
 
-    // Save the file to the database
     const savedFile = await newFile.save();
-    // Redirect to the route that displays the uploaded file
-    res.redirect(`/files/${savedFile._id}`);
+
+    res.redirect('back');
   } catch (error) {
     res.status(500).send('Error saving file to database');
   }
@@ -160,11 +170,10 @@ app.post('/upload', upload.single('htmlFile'), async (req, res) => {
 
 
 app.get('/telegram/:studentId', async (req, res) => {
-  let messages = []; // Initialize as an empty array
+  let messages = []; 
   let error = null;
 
   try {
-    // Find the first file that matches the studentId
     const file = await File.findOne({ studentId: req.params.studentId });
     if (!file) {
       throw new Error('File not found for the provided student ID');
@@ -187,8 +196,10 @@ app.get('/telegram/:studentId', async (req, res) => {
   res.render('telegram', { messages, error });
 });
 app.use(studentRoutes);
+app.use(contactRoutes);
 
 const AudioFile = require('./models/audioFile');
+
 const audioStorage = multer.memoryStorage();
 const audioUpload = multer({
   storage: audioStorage,
@@ -218,7 +229,7 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
       content: req.file.buffer.toString('base64')
     };
     const config = {
-      encoding: 'LINEAR16',  
+      encoding: 'LINEAR16', 
       sampleRateHertz: 16000, 
       languageCode: 'uk-UA',
       enableAutomaticPunctuation: true,
@@ -238,7 +249,7 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
       contentType: req.file.mimetype,
       data: req.file.buffer,
       studentId: studentId,
-      transcription: transcription 
+      transcription: transcription  
     });
 
     await newAudioFile.save();
@@ -258,7 +269,6 @@ app.get('/audio/:audioId', async (req, res) => {
     if (!audioFile) {
       return res.status(404).send('Audio file not found.');
     }
-
     res.set('Content-Type', audioFile.contentType);
     res.send(audioFile.data);
   } catch (error) {
@@ -289,6 +299,7 @@ app.get('/audioVoice/:studentId', async (req, res) => {
 
   } catch (error) {
     console.error('Error retrieving audio files:', error);
+
     res.render('audioVoice', {
       studentId: studentId,
       audios: [],

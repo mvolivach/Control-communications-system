@@ -1,75 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-    <%- include('./partials/head.ejs') %>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<head>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email History</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f7f7f7;
-    }
-    .email-list {
-      list-style-type: none;
-      padding: 0;
-      width: 100%;
-      max-width: 800px;
-    }
-    .email-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
-      padding: 15px;
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .email-item.sent {
-      flex-direction: row-reverse;
-      text-align: right;
-    }
-    .email-content {
-      flex: 1;
-    }
-    .email-date {
-      color: #999;
-      font-size: 0.8em;
-      margin-bottom: 5px;
-    }
-    .email-subject {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .email-sender {
-      color: #666;
-      margin-bottom: 5px;
-    }
-    .email-snippet {
-      white-space: pre-wrap;
-    }
-  </style>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
 </head>
 <body>
   <%- include('./partials/nav.ejs') %>
   <div class="email-container">
     <ul class="email-list">
       <% messages.forEach(message => { %>
-        <li class="email-item <%= message.payload.headers.find(header => header.name === 'From').value.includes('mvolivach2003@gmail.com') ? 'sent' : '' %>">
+        <li class="email-item common-container <%= message.payload.headers.find(header => header.name === 'From').value.includes('mvolivach2003@gmail.com') ? 'sent' : '' %>">
           <div class="email-content">
-            <div class="email-date">Date: <%= new Date(parseInt(message.internalDate)).toLocaleString() %></div>
-            <div class="email-subject">Subject: <%= message.payload.headers.find(header => header.name === 'Subject').value %></div>
-            <div class="email-sender">From: <%= message.payload.headers.find(header => header.name === 'From').value %></div>
-            <div class="email-snippet">Snippet: <%= message.snippet %></div>
+            <div class="common-header">
+              <span>Дата: <%= new Date(parseInt(message.internalDate)).toLocaleString() %></span>
+              <strong>Тема: <%= message.payload.headers.find(header => header.name === 'Subject').value %></strong>
+            </div>
+            <div class="common-body">
+              <div>Від: <%= message.payload.headers.find(header => header.name === 'From').value %></div>
+              <div>Текст повідомлення: <%= message.snippet %></div>
+            </div>
           </div>
         </li>
       <% }); %>

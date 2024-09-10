@@ -13,21 +13,21 @@ const {
   deleteReminder,
   addReminder,
 } = require('../controllers/student-controller');
+const { requireAuth } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.get('/students/:id', getStudent);
-router.delete('/students/:id', deleteStudent);
-router.get('/edit/:id', getEditStudent);
-router.put('/edit/:id', editStudent);
-router.get('/students', getStudents);
-router.get('/add-student', getAddStudent);
-router.post('/add-student', addStudent);
-router.post('/students/toggle-archive/:id', toggleArchiveStudent);
-router.get('/archived', getArchivedStudents);
-router.get('/students/:studentId/reminders', getReminders);
-router.delete('/students/:studentId/reminders/:id', deleteReminder);
-
-router.post('/students/:studentId/reminders/add', addReminder);
+router.get('/students/:id', requireAuth, getStudent);
+router.delete('/students/:id', requireAuth, deleteStudent);
+router.get('/edit/:id', requireAuth, getEditStudent);
+router.put('/edit/:id', requireAuth, editStudent);
+router.get('/students', requireAuth, getStudents);
+router.get('/add-student', requireAuth, getAddStudent);
+router.post('/add-student', requireAuth, addStudent);
+router.post('/students/toggle-archive/:id', requireAuth, toggleArchiveStudent);
+router.get('/archived', requireAuth, getArchivedStudents);
+router.get('/students/:studentId/reminders', requireAuth, getReminders);
+router.delete('/students/:studentId/reminders/:id', requireAuth, deleteReminder);
+router.post('/students/:studentId/reminders/add', requireAuth, addReminder);
 
 module.exports = router;

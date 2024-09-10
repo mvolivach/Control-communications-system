@@ -13,10 +13,10 @@
       <ul class="list-unstyled">
         <% if (students.length) { %>
           <% students.forEach(({ _id, surname, createdAt, name, patronymic, phone, email, group, course, certifications, hasDueReminders, remindersDue }) => { %>
-            <li class="card mb-3">
+            <li>
               <div class="cont">
                 <h5 class="card-title">
-                  <a href="/students/<%= _id %>" class="text-decoration-none"><%= surname %> <%= name %> <%= patronymic %></a>
+                  <a href="/students/<%= _id %>" class="text-decoration"><%= surname %> <%= name %> <%= patronymic %></a>
                 </h5>           
                 <p class="card-text"><strong>Номер телефону:</strong> <%= phone %></p>
                 <p class="card-text"><strong>Email:</strong> <%= email %></p>
@@ -26,12 +26,12 @@
                 <div class="info"><span>Додано: <%= new Date(createdAt).toLocaleDateString() %></span></div>
                 
                 <div>
-                  <button class="btn btn-del" data-id="<%= _id %>">
+                  <button class="btn-delete btn btn-del" data-id="<%= _id %>">
                     Видалити
                   </button>
                   <button onclick="toggleArchive('<%= _id %>')" class="btn btn-del">Архівувати</button>
                   <% if (hasDueReminders) { %>
-                    <div class="alert alert-warning" role="alert">
+                    <div  role="alert">
                       <strong style="color: red;">Увага:</strong> Нагадувань, які потребують вашої уваги: <%= remindersDue.length %>.
                     </div>
                   <% } %>

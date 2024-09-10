@@ -2,37 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
 </head>
 <body>
-    <%- include('partials/nav'); -%>
-  <h1>Reminders for Student ID: <%= studentId %></h1>
+  <%- include('partials/nav'); -%>
+  <div class="container mt-5">
+    <h2>Додати нагадування</h2>
+    <form action="/students/<%= studentId %>/reminders/add" method="POST" class="bg-white p-4 rounded shadow-sm">
+      <div class="mb-3">
+        <label for="description" class="form-label">Опис:</label>
+        <input type="text" id="description" name="description" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="reminderDate" class="form-label">Дата нагадування:</label>
+        <input type="date" id="reminderDate" name="reminderDate" class="form-control" required>
+      </div>
+      <button type="submit" class="btn">Додати</button>
+    </form>
 
-  <h2>Add New Reminder</h2>
-  <form action="/students/<%= studentId %>/reminders/add" method="POST">
-    <label for="description">Description:</label>
-    <input type="text" id="description" name="description" required><br>
-    <label for="reminderDate">Reminder Date:</label>
-    <input type="date" id="reminderDate" name="reminderDate" required><br>
-    <button type="submit">Add Reminder</button>
-  </form>
-
-  <h2>Existing Reminders</h2>
-  <ul>
-    <% reminders.forEach(function(reminder) { %>
-      <li>
-        <strong>Description:</strong> <%= reminder.description %><br>
-        <strong>Date:</strong> <%= reminder.reminderDate.toDateString() %><br>
-        <strong>Status:</strong> <%= reminder.isCompleted ? 'Completed' : 'Pending' %>
-        <form action="/students/<%= studentId %>/reminders/<%= reminder._id %>?_method=DELETE" method="POST">
-            <button type="submit">Delete Reminder</button>
-          </form>
-          
-      </li>
-    <% }); %>
-  </ul>
-  <a href="/students">Back to Students</a>
+    <% if (reminders.length > 0) { %>
+      <h2 class="mt-5">Наявні нагадування</h2> <!-- Add margin-top to position lower -->
+      <ul class="list-unstyled mt-3">
+        <% reminders.forEach(function(reminder) { %>
+          <li class="card mb-3">
+            <div class="card-body">
+              <p class="card-text"><strong>Опис:</strong> <%= reminder.description %></p>
+              <p class="card-text"><strong>Дата:</strong>
+              <%= new Date(reminder.reminderDate).toLocaleDateString('uk-UA', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) %></p>
+              <p class="card-text"><strong>Статус:</strong> <%= reminder.isCompleted ? 'Завершено' : 'В очікуванні' %></p>
+              <form action="/students/<%= studentId %>/reminders/<%= reminder._id %>?_method=DELETE" method="POST" style="background: none; border: none; padding: 0; margin: 0 auto;">
+                <button type="submit" class="btn">Видалити запис</button>
+              </form>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+    <% } else { %>
+      <h2 class="mt-5">Нема нагадувань</h2> <!-- Add margin-top to position lower -->
+    <% } %>
+    <a href="/students" class="btn">Повернутись назад</a>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

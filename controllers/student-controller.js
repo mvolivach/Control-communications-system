@@ -1,5 +1,5 @@
 const Student = require('../models/student');
-const Reminder = require('../models/reminders');
+const Reminder = require('../models/reminder');
 const createPath = require('../helpers/create-path');
 
 const handleError = (res, error) => {
@@ -11,42 +11,69 @@ const getStudent = (req, res) => {
   const title = 'Student';
   Student
     .findById(req.params.id)
-    .then(student => res.render(createPath('student'), { student, title }))
+    .then(student => {
+      if (student.user.toString() === req.user._id.toString()) {
+        res.render(createPath('student'), { student, title });
+      } else {
+        res.status(403).send('Forbidden');
+      }
+    })
     .catch((error) => handleError(res, error));
-}
+};
 
 const deleteStudent = (req, res) => {
   Student
-  .findByIdAndDelete(req.params.id)
-  .then((result) => {
-    res.sendStatus(200);
-  })
-  .catch((error) => handleError(res, error));
-}
+    .findById(req.params.id)
+    .then(student => {
+      if (student.user.toString() === req.user._id.toString()) {
+        return student.remove();
+      } else {
+        res.status(403).send('Forbidden');
+      }
+    })
+    .then((result) => {
+      res.sendStatus(200);
+    })
+    .catch((error) => handleError(res, error));
+};
 
 const getEditStudent = (req, res) => {
   const title = 'Edit student';
   Student
     .findById(req.params.id)
-    .then(student => res.render(createPath('edit-student'), { student, title }))
+    .then(student => {
+      if (student.user.toString() === req.user._id.toString()) {
+        res.render(createPath('edit-student'), { student, title });
+      } else {
+        res.status(403).send('Forbidden');
+      }
+    })
     .catch((error) => handleError(res, error));
-}
+};
 
 const editStudent = (req, res) => {
   const { surname, patronymic, name , phone, email, group, course, certifications} = req.body;
   const { id } = req.params;
   Student
-    .findByIdAndUpdate(req.params.id, { surname, patronymic, name , phone, email, group, course, certifications})
+    .findById(req.params.id)
+    .then(student => {
+      if (student.user.toString() === req.user._id.toString()) {
+        return student.updateOne({ surname, patronymic, name , phone, email, group, course, certifications});
+      } else {
+        res.status(403).send('Forbidden');
+      }
+    })
     .then((result) => res.redirect(`/students/${id}`))
     .catch((error) => handleError(res, error));
-}
+};
 
 const getStudents = async (req, res) => {
   const title = 'Students';
+  const userId = req.user._id; // Get the user ID from the authenticated user
   try {
-    let students = await Student.find({ isArchived: false }).sort({ createdAt: -1 }).lean();
+    let students = await Student.find({ user: userId, isArchived: false }).sort({ createdAt: -1 }).lean();
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize today's date for comparison
+    today.setHours(23, 59, 59, 999);
 
     const studentsWithReminders = await Promise.all(students.map(async (student) => {
       let reminders = await Reminder.find({ studentId: student._id });
@@ -60,42 +87,59 @@ const getStudents = async (req, res) => {
   } catch (error) {
     handleError(res, error);
   }
-}
+};
 
 
 const getAddStudent = (req, res) => {
   const title = 'Add Student';
   res.render(createPath('add-student'), { title });
-}
+};
 
 const addStudent = (req, res) => {
   const { surname, patronymic, name, phone, email, group, course, certifications } = req.body;
-  const student = new Student({ surname, patronymic, name , phone, email, group, course, certifications});
+  const userId = req.user._id; // Get the user ID from the authenticated user
+
+  const student = new Student({
+    surname,
+    patronymic,
+    name,
+    phone,
+    email,
+    group,
+    course,
+    certifications,
+    user: userId // Associate the student with the logged-in user
+  });
+
   student
     .save()
-    .then((result) => res.redirect('/students'))
+    .then(() => res.redirect('/students'))
     .catch((error) => handleError(res, error));
-}
+};
+
 
 const toggleArchiveStudent = (req, res) => {
   const { id } = req.params;
   Student.findById(id)
     .then(student => {
-      student.isArchived = !student.isArchived;
-      student.save()
-        .then(() => res.redirect('/students'))
-        .catch(error => handleError(res, error));
+      if (student.user.toString() === req.user._id.toString()) {
+        student.isArchived = !student.isArchived;
+        return student.save();
+      } else {
+        res.status(403).send('Forbidden');
+      }
     })
+    .then(() => res.redirect('/students'))
     .catch((error) => handleError(res, error));
-}
+};
 
 const getArchivedStudents = (req, res) => {
   const title = 'Archived Students';
-  Student.find({ isArchived: true })
+  Student.find({ user: req.user._id, isArchived: true })
     .sort({ createdAt: -1 })
     .then(students => res.render(createPath('archived'), { students, title }))  
     .catch((error) => handleError(res, error));
-}
+};
 
 const getReminders = (req, res) => {
   const { studentId } = req.params; // Assuming you pass the student's ID in the route parameter
@@ -106,7 +150,6 @@ const getReminders = (req, res) => {
       })
       .catch((error) => handleError(res, error));
 };
-
 
 const addReminder = (req, res) => {
   const { studentId } = req.params; // Get the student ID from the URL
@@ -125,8 +168,6 @@ const addReminder = (req, res) => {
 
 // Don't forget to export this function and add it to your module exports
 
-
-// Function to delete a specific reminder
 const deleteReminder = (req, res) => {
   const { studentId, id } = req.params; // Get studentId and reminder ID from the URL
 
@@ -134,8 +175,6 @@ const deleteReminder = (req, res) => {
     .then(() => res.redirect(`/students/${studentId}/reminders`)) // Redirect back to the reminders page for the student
     .catch((error) => handleError(res, error));
 };
-
-
 
 module.exports = {
   getStudent,
