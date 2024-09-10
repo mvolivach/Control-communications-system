@@ -5,48 +5,57 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Завантажити аудіозапис телефонної розмови</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <%- include('./partials/nav.ejs') %>
-    <h1>Завантажити аудіозапис телефонної розмови</h1>
-    <form id="uploadForm" action="/upload-audio/<%= studentId %>" method="post" enctype="multipart/form-data">
-        <input type="file" name="audioFile" accept="audio/*">
-        <button type="submit">Upload Audio</button>
+  <div class="container">
+    <h1 class="text-center mt-4">Завантажити аудіозапис телефонної розмови</h1>
+    <form id="uploadForm" action="/upload-audio/<%= studentId %>" method="post" enctype="multipart/form-data" class="mt-3">
+        <input type="file" name="audioFile" accept="audio/*" class="form-control">
+        <button type="submit" class="btn btn-primary mt-3">Завантажити запис</button>
     </form>
 
     <% if (studentId) { %> 
-        <div class="audio-player-container">
+      <div class="row">
+        <div class="col-12">
+          <div class="audio-player-container">
             <audio controls>
                 <source src="/audio/student/<%= studentId %>" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
+          </div>
+          <div class="transcription-container">
+            <h2>Транскрипція тексту, що міститься в аудіозаписі</h2>
+            <p><%= transcription %></p> <!-- Display the transcription here -->
+          </div>
         </div>
+      </div>
     <% } %>
+  </div>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Stop the form from submitting normally
-            const formData = new FormData(this);
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json(); // Or handle it however you want
-                }
-                throw new Error('Network response was not ok.');
-            })
-            .then(data => {
-                // Handle success
-                console.log('Success:', data);
-                alert('File uploaded successfully!');
-                // Optionally reload the audio element or update the page
-                window.location.reload(); // Simple way to refresh the page and see the new audio
-            })          
-        });
-    </script>
+  <script>
+      document.getElementById('uploadForm').addEventListener('submit', function(event) {
+          event.preventDefault(); // Stop the form from submitting normally
+          const formData = new FormData(this);
+          fetch(this.action, {
+              method: 'POST',
+              body: formData,
+          })
+          .then(response => {
+              if (response.ok) {
+                  return response.json(); // Or handle it however you want
+              }
+              throw new Error('Network response was not ok.');
+          })
+          .then(data => {
+              // Handle success
+              console.log('Success:', data);
+              alert('File uploaded successfully!');
+              window.location.reload(); // Simple way to refresh the page and see the new audio and transcription
+          })          
+      });
+  </script>
 </body>
 </html>
