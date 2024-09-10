@@ -1,4 +1,5 @@
 const Student = require('../models/student');
+const Reminder = require('../models/reminders');
 const createPath = require('../helpers/create-path');
 
 const handleError = (res, error) => {
@@ -40,14 +41,27 @@ const editStudent = (req, res) => {
     .catch((error) => handleError(res, error));
 }
 
-const getStudents = (req, res) => {
+const getStudents = async (req, res) => {
   const title = 'Students';
-  Student
-    .find({ isArchived: false })
-    .sort({ createdAt: -1 })
-    .then(students => res.render(createPath('students'), { students, title }))
-    .catch((error) => handleError(res, error));
+  try {
+    let students = await Student.find({ isArchived: false }).sort({ createdAt: -1 }).lean();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize today's date for comparison
+
+    const studentsWithReminders = await Promise.all(students.map(async (student) => {
+      let reminders = await Reminder.find({ studentId: student._id });
+      let remindersDue = reminders.filter(reminder => new Date(reminder.reminderDate) <= today);
+      student.remindersDue = remindersDue;
+      student.hasDueReminders = remindersDue.length > 0;
+      return student;
+    }));
+
+    res.render(createPath('students'), { students: studentsWithReminders, title });
+  } catch (error) {
+    handleError(res, error);
+  }
 }
+
 
 const getAddStudent = (req, res) => {
   const title = 'Add Student';
@@ -83,6 +97,45 @@ const getArchivedStudents = (req, res) => {
     .catch((error) => handleError(res, error));
 }
 
+const getReminders = (req, res) => {
+  const { studentId } = req.params; // Assuming you pass the student's ID in the route parameter
+  Reminder.find({ studentId: studentId })
+      .then(reminders => {
+          const title = 'Reminders';
+          res.render(createPath('reminders'), { reminders, title, studentId }); // Assuming you have a reminders.ejs file in your views
+      })
+      .catch((error) => handleError(res, error));
+};
+
+
+const addReminder = (req, res) => {
+  const { studentId } = req.params; // Get the student ID from the URL
+  const { description, reminderDate } = req.body; // Get data from form fields
+  const reminder = new Reminder({
+      studentId: studentId,
+      description: description,
+      reminderDate: new Date(reminderDate),
+      isCompleted: false // default value
+  });
+
+  reminder.save()
+      .then(() => res.redirect(`/students/${studentId}/reminders`)) // Redirect back to the reminders page
+      .catch((error) => handleError(res, error));
+};
+
+// Don't forget to export this function and add it to your module exports
+
+
+// Function to delete a specific reminder
+const deleteReminder = (req, res) => {
+  const { studentId, id } = req.params; // Get studentId and reminder ID from the URL
+
+  Reminder.findByIdAndDelete(id)
+    .then(() => res.redirect(`/students/${studentId}/reminders`)) // Redirect back to the reminders page for the student
+    .catch((error) => handleError(res, error));
+};
+
+
 
 module.exports = {
   getStudent,
@@ -94,4 +147,7 @@ module.exports = {
   addStudent,
   toggleArchiveStudent,
   getArchivedStudents,
+  getReminders,
+  deleteReminder,
+  addReminder,
 };

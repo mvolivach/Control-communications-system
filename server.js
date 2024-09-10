@@ -19,8 +19,6 @@ app.get('/telegram', (req, res) => {
     res.render('telegram'); 
 });
 
-
-
 app.use(cookieParser());
 const multer = require('multer');
 const cheerio = require('cheerio');
@@ -28,7 +26,7 @@ const cheerio = require('cheerio');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-app.use(express.static('public'));
+app.use(express.static('public')); // Serve static files
 
 
 app.set('view engine', 'ejs');
@@ -55,8 +53,6 @@ app.use(methodOverride('_method'));
 app.get('*', checkUser);
 app.get('/', (req, res) => res.render('index'));
 app.use(authRoutes);
-
-
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 const TOKEN_PATH = path.join(process.cwd(), 'token.json');
@@ -125,10 +121,10 @@ app.get('/emails', async (req, res) => {
   }
 });
 
-
-const File = require('./models/file.js');
+const File = require('./models/file.js'); // Assuming you have a File model defined
 
 app.post('/upload', upload.single('htmlFile'), async (req, res) => {
+  // Extract the studentId from the request, assuming it's passed as a query parameter
   const studentId = req.query.studentId;
   
   if (!req.file) {
@@ -140,19 +136,22 @@ app.post('/upload', upload.single('htmlFile'), async (req, res) => {
   }
 
   try {
+    // Validate the studentId
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
       return res.status(400).send('Invalid student ID.');
     }
 
+    // Create a new File instance with the studentId
     const newFile = new File({
       filename: req.file.originalname,
       contentType: req.file.mimetype,
       data: req.file.buffer,
-      studentId: studentId 
+      studentId: studentId  // Associate the file with a student
     });
 
+    // Save the file to the database
     const savedFile = await newFile.save();
-
+    // Redirect to the route that displays the uploaded file
     res.redirect(`/files/${savedFile._id}`);
   } catch (error) {
     res.status(500).send('Error saving file to database');
@@ -161,10 +160,11 @@ app.post('/upload', upload.single('htmlFile'), async (req, res) => {
 
 
 app.get('/telegram/:studentId', async (req, res) => {
-  let messages = [];
+  let messages = []; // Initialize as an empty array
   let error = null;
 
   try {
+    // Find the first file that matches the studentId
     const file = await File.findOne({ studentId: req.params.studentId });
     if (!file) {
       throw new Error('File not found for the provided student ID');
@@ -193,7 +193,6 @@ const audioStorage = multer.memoryStorage();
 const audioUpload = multer({
   storage: audioStorage,
   fileFilter: (req, file, cb) => {
-    // Accept audio files only
     if (file.mimetype.startsWith('audio/')) {
       cb(null, true);
     } else {
@@ -212,17 +211,15 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
     return res.status(400).render('audio', { message: 'Не завантажено жодного аудіо!', audioId: null, studentId: studentId });
   }
 
-
   const client = new speech.SpeechClient();
 
   try {
-
     const audio = {
       content: req.file.buffer.toString('base64')
     };
     const config = {
       encoding: 'LINEAR16',  
-      sampleRateHertz: 16000,  
+      sampleRateHertz: 16000, 
       languageCode: 'uk-UA',
       enableAutomaticPunctuation: true,
     };
@@ -230,7 +227,6 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
       audio: audio,
       config: config,
     };
-
 
     const [response] = await client.recognize(request);
     const transcription = response.results
@@ -247,7 +243,6 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
 
     await newAudioFile.save();
 
-
     res.redirect(`/audioVoice/${studentId}`);
   } catch (error) {
     console.error('Failed to save audio file or transcribe:', error);
@@ -258,13 +253,11 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
 app.get('/audio/:audioId', async (req, res) => {
   try {
     const audioId = req.params.audioId;
-
     const audioFile = await AudioFile.findById(audioId);
 
     if (!audioFile) {
       return res.status(404).send('Audio file not found.');
     }
-
 
     res.set('Content-Type', audioFile.contentType);
     res.send(audioFile.data);
@@ -275,15 +268,12 @@ app.get('/audio/:audioId', async (req, res) => {
 });
 
 
-
 app.get('/audioVoice/:studentId', async (req, res) => {
   const studentId = req.params.studentId;
 
   try {
-
     const audioFiles = await AudioFile.find({ studentId: studentId });
     if (!audioFiles.length) {
-
       return res.render('audioVoice', {
         studentId: studentId,
         audios: [],
@@ -323,8 +313,29 @@ app.delete('/audio/:audioId', async (req, res) => {
   }
 });
 
+app.get('/reminders/:studentId', async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const reminders = await Reminder.find({ studentId }).sort({ reminderDate: 1 });
+    res.render('reminders', { reminders, studentId });
+  } catch (error) {
+    res.status(500).send('Error retrieving reminders');
+  }
+});
+
+app.post('/reminders', async (req, res) => {
+  const { studentId, description, reminderDate } = req.body;
+  try {
+    const newReminder = new Reminder({ studentId, description, reminderDate });
+    await newReminder.save();
+    res.redirect(`/reminders/${studentId}`);
+  } catch (error) {
+    res.status(500).send('Error saving reminder');
+  }
+});
 
 const speech = require('@google-cloud/speech');
+
 
 app.get('/', (req, res) => {
   const title = 'Home';

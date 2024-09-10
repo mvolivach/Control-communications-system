@@ -54,7 +54,7 @@
 }
 
       document.getElementById('uploadForm').addEventListener('submit', function(event) {
-          event.preventDefault(); // Stop the form from submitting normally
+          event.preventDefault(); 
           const formData = new FormData(this);
           fetch(this.action, {
               method: 'POST',
@@ -62,15 +62,15 @@
           })
           .then(response => {
               if (response.ok) {
-                  return response.json(); // Or handle it however you want
+                  return response.json(); 
               }
               throw new Error('Network response was not ok.');
           })
           .then(data => {
-              // Handle success
+
               console.log('Success:', data);
               alert('File uploaded successfully!');
-              window.location.reload(); // Simple way to refresh the page and see the new audio and transcription
+              window.location.reload(); 
           })          
       });
   </script>

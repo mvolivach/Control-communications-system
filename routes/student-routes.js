@@ -9,6 +9,9 @@ const {
   addStudent,
   toggleArchiveStudent,
   getArchivedStudents,
+  getReminders,
+  deleteReminder,
+  addReminder,
 } = require('../controllers/student-controller');
 
 const router = express.Router();
@@ -22,5 +25,9 @@ router.get('/add-student', getAddStudent);
 router.post('/add-student', addStudent);
 router.post('/students/toggle-archive/:id', toggleArchiveStudent);
 router.get('/archived', getArchivedStudents);
+router.get('/students/:studentId/reminders', getReminders);
+router.delete('/students/:studentId/reminders/:id', deleteReminder);
+
+router.post('/students/:studentId/reminders/add', addReminder);
 
 module.exports = router;

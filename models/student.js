@@ -37,7 +37,8 @@ const studentSchema = new Schema({
   isArchived: {
     type: Boolean,
     default: false
-  }
+  },
+  
 }, { timestamps: true });
 
 const Student = mongoose.model('Student', studentSchema);

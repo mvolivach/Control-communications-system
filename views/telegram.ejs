@@ -35,7 +35,7 @@
             font-size: 0.9rem;
         }
         #messagesContainer {
-            display: none; 
+            display: none;
         }
         .chat-container {
     max-width: 600px;
@@ -93,7 +93,7 @@
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const fileInput = document.getElementById('fileInput');
-
+    
             const pathArray = window.location.pathname.split('/');
             const studentId = pathArray[pathArray.length - 1]; 
     
@@ -118,7 +118,6 @@
                         <div class="text">${msg.text}</div>`;
                     container.appendChild(messageElement);
                 });
-
                 container.style.display = 'block';
                 historyHeader.style.display = 'block';
             })
