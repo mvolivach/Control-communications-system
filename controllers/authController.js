@@ -1,28 +1,30 @@
-const User = require('../models/User');
+const User = require('../models/users');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 
-// Handle errors
+// Обробка помилок
 const handleErrors = (err) => {
   console.log(err.message, err.code);
   let errors = { email: '', password: '' };
 
-  // Incorrect email
+  // Невірний email
   if (err.message === 'incorrect email') {
-    errors.email = 'That email is not registered';
+    errors.email = 'Даний email ще не зареєстровано';
   }
 
-  // Incorrect password
+  // Невірний пароль
   if (err.message === 'incorrect password') {
-    errors.password = 'That password is incorrect';
+    errors.password = 'Даний пароль є невірним';
   }
 
-  // Duplicate email error
+  // Помилка дублювання email
   if (err.code === 11000) {
-    errors.email = 'that email is already registered';
+    errors.email = 'Даний email уже зареєстровано';
     return errors;
   }
 
-  // Validation errors
+  // Помилки валідації
   if (err.message.includes('user validation failed')) {
     Object.values(err.errors).forEach(({ properties }) => {
       errors[properties.path] = properties.message;
@@ -32,20 +34,21 @@ const handleErrors = (err) => {
   return errors;
 }
 
-// Create JSON Web Token
-const maxAge = 3 * 24 * 60 * 60;
+const maxAge = 3 * 24 * 60 * 60; // Максимальний час життя токену
+
+// Створення токену
 const createToken = (id) => {
-  return jwt.sign({ id }, 'net ninja secret', {
+  return jwt.sign({ id }, 'my communication secret', {
     expiresIn: maxAge
   });
 };
 
-// Middleware to check current user
+// Перевірка користувача
 const checkUser = (req, res, next) => {
   const token = req.cookies.jwt;
 
   if (token) {
-    jwt.verify(token, 'net ninja secret', async (err, decodedToken) => {
+    jwt.verify(token, 'my communication secret', async (err, decodedToken) => {
       if (err) {
         res.locals.user = null;
         next();
@@ -61,11 +64,12 @@ const checkUser = (req, res, next) => {
   }
 };
 
+// Перевірка авторизації
 const requireAuth = (req, res, next) => {
   const token = req.cookies.jwt;
 
   if (token) {
-    jwt.verify(token, 'net ninja secret', (err, decodedToken) => {
+    jwt.verify(token, 'my communication secret', (err, decodedToken) => {
       if (err) {
         console.log(err.message);
         res.redirect('/login');
@@ -79,7 +83,7 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// Controller actions
+// Контролери дій
 module.exports.signup_get = (req, res) => {
   res.render('signup');
 }

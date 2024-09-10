@@ -39,6 +39,7 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Обробка кліку по кнопці видалення студента
     document.addEventListener('click', (e) => {
       const id = e.target?.dataset?.id || null;
       if (id && e.target.matches('.btn-delete, .btn-delete *')) {
@@ -52,6 +53,7 @@
       }
     });
 
+    // Функція для перемикання статусу архівації студента
     function toggleArchive(id) {
       fetch(`/students/toggle-archive/${id}`, {
         method: 'POST'

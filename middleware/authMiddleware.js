@@ -1,16 +1,17 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../models/users');
 
+// Middleware для перевірки автентифікації користувача
 const requireAuth = (req, res, next) => {
   const token = req.cookies.jwt;
 
   if (token) {
-    jwt.verify(token, 'net ninja secret', (err, decodedToken) => {
+    jwt.verify(token, 'my communication secret', (err, decodedToken) => {
       if (err) {
         console.log(err.message);
         res.redirect('/login');
       } else {
-        req.user = { _id: decodedToken.id }; // Set the user ID on the request
+        req.user = { _id: decodedToken.id }; // Встановлюємо ID користувача у запиті
         next();
       }
     });
@@ -19,18 +20,18 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// Check current user
+// Middleware для перевірки поточного користувача
 const checkUser = (req, res, next) => {
   const token = req.cookies.jwt;
   if (token) {
-    jwt.verify(token, 'net ninja secret', async (err, decodedToken) => {
+    jwt.verify(token, 'my communication secret', async (err, decodedToken) => {
       if (err) {
         res.locals.user = null;
         next();
       } else {
         let user = await User.findById(decodedToken.id);
         res.locals.user = user;
-        req.user = user; // Set the user object on the request
+        req.user = user; // Встановлюємо об'єкт користувача у запиті
         next();
       }
     });

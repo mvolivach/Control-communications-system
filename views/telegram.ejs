@@ -10,18 +10,19 @@
 <body>
   <%- include('./partials/nav.ejs') %>
   <div class="container mt-5">
-    <h1>Upload Folder with Files</h1>
+    <h1>Завантажити папку із історією листувань</h1>
     <form id="uploadForm" enctype="multipart/form-data" class="common-container">
-      <label for="files" class="form-label">Files:</label>
+      <label for="files" class="form-label">Файли:</label>
       <input type="file" id="files" name="files" webkitdirectory multiple class="form-control mb-3">
-      <button type="submit" class="btn btn-primary">Upload Files</button>
+      <p class="teleg-help">Оберіть папку з історією листувань, яку отримали у застосунку Telegram</p>
+      <button type="submit" class="btn btn-primary">Завантажити</button>
     </form>
     
     <% if (typeof messages !== 'undefined' && messages.length > 0) { %>
-      <h2 class="mt-4" id="historyHeader">Message History</h2>
+      <h2 class="mt-4" id="historyHeader">Історія листування</h2>
       <div id="messagesContainer" class="chat-container">
         <% messages.forEach(function(message) { %>
-          <div class="chat-message common-container">
+          <div class="email-item common-container">
             <div class="common-header">
               <strong><%= message.fromName %></strong>
               <span><%= message.date %></span>
@@ -65,7 +66,6 @@
       })
       .then(response => {
         if (response.ok) {
-          // Refresh the page after successful upload
           window.location.reload();
         } else {
           return response.json().then(error => {

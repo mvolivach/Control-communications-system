@@ -1,9 +1,8 @@
-// routes/telegramRoutes.js
-const { Router } = require('express');
-const { getTelegramMessages } = require('../controllers/fileController');
+const express = require('express');
+const router = express.Router();
+const { uploadFiles, handleFileUpload, getTelegramMessages } = require('../controllers/telegramController');
 
-const router = Router();
-
+router.post('/upload', uploadFiles, handleFileUpload);
 router.get('/telegram/:studentId', getTelegramMessages);
 
 module.exports = router;
