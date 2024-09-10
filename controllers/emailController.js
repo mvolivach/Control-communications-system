@@ -1,36 +1,48 @@
+// controllers/emailController.js
 const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs').promises;
 const { authenticate } = require('@google-cloud/local-auth');
-const NodeCache = require('node-cache');
-
+const mongoose = require('mongoose');
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 
-// Створення кешу з часом життя токену (наприклад, 1 година)
-const tokenCache = new NodeCache({ stdTTL: 3600 });
+const Token = mongoose.model('Token', new mongoose.Schema({
+  data: String
+}));
 
-// Завантаження збережених облікових даних, якщо вони існують у кеші
+// Завантаження збережених облікових даних з бази даних
 async function loadSavedCredentialsIfExist() {
-  const cachedCredentials = tokenCache.get('credentials');
-  if (cachedCredentials) {
-    return google.auth.fromJSON(cachedCredentials);
+  try {
+    const tokenDoc = await Token.findOne();
+    if (tokenDoc) {
+      const credentials = JSON.parse(tokenDoc.data);
+      return google.auth.fromJSON(credentials);
+    }
+    return null;
+  } catch (err) {
+    console.error('Error loading saved credentials from DB:', err);
+    return null;
   }
-  return null;
 }
 
-// Збереження облікових даних користувача у кеші
+// Збереження облікових даних користувача в базу даних
 async function saveCredentials(client) {
   const content = await fs.readFile(CREDENTIALS_PATH);
   const keys = JSON.parse(content);
   const key = keys.installed || keys.web;
-  const payload = {
+  const payload = JSON.stringify({
     type: 'authorized_user',
     client_id: key.client_id,
     client_secret: key.client_secret,
     refresh_token: client.credentials.refresh_token,
-  };
-  tokenCache.set('credentials', payload);
+  });
+
+  try {
+    await Token.updateOne({}, { data: payload }, { upsert: true });
+  } catch (err) {
+    console.error('Error saving credentials to DB:', err);
+  }
 }
 
 // Авторизація користувача
