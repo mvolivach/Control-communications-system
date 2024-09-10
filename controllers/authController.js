@@ -1,33 +1,30 @@
-const User = require("../models/User");
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// handle errors
+// Handle errors
 const handleErrors = (err) => {
   console.log(err.message, err.code);
   let errors = { email: '', password: '' };
 
-  // incorrect email
+  // Incorrect email
   if (err.message === 'incorrect email') {
     errors.email = 'That email is not registered';
   }
 
-  // incorrect password
+  // Incorrect password
   if (err.message === 'incorrect password') {
     errors.password = 'That password is incorrect';
   }
 
-  // duplicate email error
+  // Duplicate email error
   if (err.code === 11000) {
     errors.email = 'that email is already registered';
     return errors;
   }
 
-  // validation errors
+  // Validation errors
   if (err.message.includes('user validation failed')) {
-    // console.log(err);
     Object.values(err.errors).forEach(({ properties }) => {
-      // console.log(val);
-      // console.log(properties);
       errors[properties.path] = properties.message;
     });
   }
@@ -35,7 +32,7 @@ const handleErrors = (err) => {
   return errors;
 }
 
-// create json web token
+// Create JSON Web Token
 const maxAge = 3 * 24 * 60 * 60;
 const createToken = (id) => {
   return jwt.sign({ id }, 'net ninja secret', {
@@ -43,7 +40,46 @@ const createToken = (id) => {
   });
 };
 
-// controller actions
+// Middleware to check current user
+const checkUser = (req, res, next) => {
+  const token = req.cookies.jwt;
+
+  if (token) {
+    jwt.verify(token, 'net ninja secret', async (err, decodedToken) => {
+      if (err) {
+        res.locals.user = null;
+        next();
+      } else {
+        let user = await User.findById(decodedToken.id);
+        res.locals.user = user;
+        next();
+      }
+    });
+  } else {
+    res.locals.user = null;
+    next();
+  }
+};
+
+const requireAuth = (req, res, next) => {
+  const token = req.cookies.jwt;
+
+  if (token) {
+    jwt.verify(token, 'net ninja secret', (err, decodedToken) => {
+      if (err) {
+        console.log(err.message);
+        res.redirect('/login');
+      } else {
+        console.log(decodedToken);
+        next();
+      }
+    });
+  } else {
+    res.redirect('/login');
+  }
+};
+
+// Controller actions
 module.exports.signup_get = (req, res) => {
   res.render('signup');
 }
@@ -56,14 +92,11 @@ module.exports.signup_post = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check if the email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      // If the user exists, return an error message
       return res.status(400).json({ errors: { email: 'Email is already registered' } });
     }
 
-    // If no existing user, proceed to create a new user
     const user = await User.create({ email, password });
     const token = createToken(user._id);
     res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
@@ -87,10 +120,13 @@ module.exports.login_post = async (req, res) => {
     const errors = handleErrors(err);
     res.status(400).json({ errors });
   }
-
 }
 
 module.exports.logout_get = (req, res) => {
+  
   res.cookie('jwt', '', { maxAge: 1 });
   res.redirect('/');
 }
+
+module.exports.checkUser = checkUser;
+module.exports.requireAuth = requireAuth;

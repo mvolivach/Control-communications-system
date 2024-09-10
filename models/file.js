@@ -9,6 +9,11 @@ const fileSchema = new Schema({
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Student'
+  },
+  fileType: {
+    type: String,
+    enum: ['html', 'photo'],
+    required: true
   }
 });
 

@@ -1,5 +1,4 @@
 node_modules
 credentials.json
-token.json
 speech.json
-.env
+token.json

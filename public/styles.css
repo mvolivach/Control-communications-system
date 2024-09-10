@@ -9,13 +9,6 @@ body {
   padding: 0;
 }
 
-/* All existing styles remain unchanged */
-
-/* New Styles */
-.navbar {
-  background-color: #eea552; /* Adjust as needed */
-}
-
 .navbar-nav .nav-link {
   font-family: 'Quicksand', sans-serif;
   font-weight: 700;
@@ -65,7 +58,7 @@ nav li a{
 
 .btn{
   border-radius: 36px;
-  background: #FEE996;
+  background: #e6e6e6;
   transition: background 0.3s ease;
   display: flex;
   justify-content: center;
@@ -127,7 +120,7 @@ label{
 button{
   margin-top: 30px;
   border-radius: 36px;
-  background: #FEE996;
+  background: #e6e6e6;
   border:0;
   text-transform: uppercase;
   font-weight: 700;
@@ -335,10 +328,19 @@ button, input[type="file"] {
   display: block;
 }
 
-.error {
-  padding: 20px;
-  width: 800px;
+.email-images {
+  margin-top: 10px;
 }
+
+.email-image {
+  margin-bottom: 10px;
+}
+
+.email-image img {
+  max-width: 100%;
+  height: auto;
+}
+
 
 .error-code {
   font-size: 200px; 
@@ -350,11 +352,6 @@ button, input[type="file"] {
 p {
   color: #333;
   font-size: 20px;
-}
-
-nav {
-  background-color: #eea552; /* Example color: green */
-  padding: 10px; /* Add some padding for better appearance */
 }
 
 nav ul {

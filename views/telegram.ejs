@@ -10,15 +10,16 @@
 <body>
   <%- include('./partials/nav.ejs') %>
   <div class="container mt-5">
-    <h1>Завантаження файлу з історією листування</h1>
+    <h1>Upload Folder with Files</h1>
     <form id="uploadForm" enctype="multipart/form-data" class="common-container">
-      <input type="file" id="fileInput" name="htmlFile" accept=".html" class="form-control mb-3">
-      <button type="submit" class="btn btn-primary">Завантажити файл</button>
+      <label for="files" class="form-label">Files:</label>
+      <input type="file" id="files" name="files" webkitdirectory multiple class="form-control mb-3">
+      <button type="submit" class="btn btn-primary">Upload Files</button>
     </form>
-    <h2 class="mt-4" id="historyHeader" style="display: none;">Історія листування</h2>
-    <div id="messagesContainer"></div>
+    
     <% if (typeof messages !== 'undefined' && messages.length > 0) { %>
-      <div class="chat-container">
+      <h2 class="mt-4" id="historyHeader">Message History</h2>
+      <div id="messagesContainer" class="chat-container">
         <% messages.forEach(function(message) { %>
           <div class="chat-message common-container">
             <div class="common-header">
@@ -26,23 +27,37 @@
               <span><%= message.date %></span>
             </div>
             <div class="common-body">
-              <%= message.text %>
+              <div><%= message.text %></div>
+              <% if (message.photos && message.photos.length > 0) { %>
+                <div class="photo-container mt-3">
+                  <% message.photos.forEach(function(photo) { %>
+                    <div class="photo common-container mb-3">
+                      <a href="<%= photo.href %>">
+                        <img src="<%= photo.src %>" class="img-fluid" alt="photo">
+                      </a>
+                    </div>
+                  <% }); %>
+                </div>
+              <% } %>
             </div>
           </div>
         <% }); %>
       </div>
     <% } %>
   </div>
+  
   <script>
     document.getElementById('uploadForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const fileInput = document.getElementById('fileInput');
+      const filesInput = document.getElementById('files');
 
       const pathArray = window.location.pathname.split('/');
       const studentId = pathArray[pathArray.length - 1];
 
       const formData = new FormData();
-      formData.append('htmlFile', fileInput.files[0]);
+      for (let i = 0; i < filesInput.files.length; i++) {
+        formData.append('files', filesInput.files[i]);
+      }
 
       fetch(`/upload?studentId=${studentId}`, {
         method: 'POST',
@@ -58,7 +73,7 @@
           });
         }
       })
-      .catch(error => console.error('Error uploading file:', error));
+      .catch(error => console.error('Error uploading files:', error));
     });
   </script>
 </body>

@@ -12,7 +12,8 @@ const {
   getReminders,
   deleteReminder,
   addReminder,
-} = require('../controllers/student-controller');
+  toggleCompleteReminder,
+} = require('../controllers/studentController');
 const { requireAuth } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -29,5 +30,6 @@ router.get('/archived', requireAuth, getArchivedStudents);
 router.get('/students/:studentId/reminders', requireAuth, getReminders);
 router.delete('/students/:studentId/reminders/:id', requireAuth, deleteReminder);
 router.post('/students/:studentId/reminders/add', requireAuth, addReminder);
+router.put('/students/:studentId/reminders/:id', toggleCompleteReminder); // Add this line
 
 module.exports = router;

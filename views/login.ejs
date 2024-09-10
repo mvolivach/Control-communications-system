@@ -3,19 +3,26 @@
 <form action="/signup">
   <h2>Увійти</h2>
   <label for="email">Email</label>
-  <input type="text" name="email"  />
+  <input type="text" name="email" />
   <div class="email error"></div>
   <label for="password">Пароль</label>
-  <input type="password" name="password"  />
+  <input type="password" name="password" />
   <div class="password error"></div>
-  <button>Увійти</button>
+  <button class="btn">Увійти</button>
+  <div class="recovery-message error " style="display: none;">
+    Для відновлення пароля напишіть відповідний лист на електронну пошту mvolivach2003@gmail.com з пошти, на який зареєстровано акаунт.
+  </div>
 </form>
+
 
 
 <script>
   const form = document.querySelector('form');
   const emailError = document.querySelector('.email.error');
   const passwordError = document.querySelector('.password.error');
+  const recoveryMessage = document.querySelector('.recovery-message');
+
+  let attemptCount = 0;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -32,20 +39,26 @@
       const res = await fetch('/login', { 
         method: 'POST', 
         body: JSON.stringify({ email, password }),
-        headers: {'Content-Type': 'application/json'}
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       console.log(data);
       if (data.errors) {
         emailError.textContent = data.errors.email;
         passwordError.textContent = data.errors.password;
+        attemptCount++;
+      } else {
+        attemptCount = 0;
       }
       if (data.user) {
         location.assign('/');
       }
 
-    }
-    catch (err) {
+      if (attemptCount >= 3) {
+        recoveryMessage.style.display = 'block';
+      }
+
+    } catch (err) {
       console.log(err);
     }
   });

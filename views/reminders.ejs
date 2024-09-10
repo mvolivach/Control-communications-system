@@ -18,13 +18,13 @@
       </div>
       <div class="mb-3">
         <label for="reminderDate" class="form-label">Дата нагадування:</label>
-        <input type="date" id="reminderDate" name="reminderDate" class="form-control" required>
+        <input type="datetime-local" id="reminderDate" name="reminderDate" class="form-control" required>
       </div>
-      <button type="submit" class="btn">Додати</button>
+      <button type="submit" class="btn btn-del">Додати</button>
     </form>
 
     <% if (reminders.length > 0) { %>
-      <h2 class="mt-5">Наявні нагадування</h2> <!-- Add margin-top to position lower -->
+      <h2 class="mt-5">Наявні нагадування</h2>
       <ul class="list-unstyled mt-3">
         <% reminders.forEach(function(reminder) { %>
           <li class="card mb-3">
@@ -34,21 +34,62 @@
               <%= new Date(reminder.reminderDate).toLocaleDateString('uk-UA', {
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric'
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',             
               }) %></p>
               <p class="card-text"><strong>Статус:</strong> <%= reminder.isCompleted ? 'Завершено' : 'В очікуванні' %></p>
-              <form action="/students/<%= studentId %>/reminders/<%= reminder._id %>?_method=DELETE" method="POST" style="background: none; border: none; padding: 0; margin: 0 auto;">
-                <button type="submit" class="btn">Видалити запис</button>
-              </form>
+              <div class="d-flex justify-content-between">
+                <button onclick="toggleCompleteReminder('<%= studentId %>', '<%= reminder._id %>', '<%= reminder.isCompleted %>')" class="btn btn-del">
+                  <%= reminder.isCompleted ? 'Позначити незавершеним' : 'Позначити завершеним' %>
+                </button>
+                <button onclick="deleteReminder('<%= studentId %>', '<%= reminder._id %>')" class="btn btn-del">Видалити запис</button>
+              </div>
             </div>
           </li>
         <% }); %>
       </ul>
     <% } else { %>
-      <h2 class="mt-5">Нема нагадувань</h2> <!-- Add margin-top to position lower -->
+      <h2 class="mt-5">Нема нагадувань</h2>
     <% } %>
-    <a href="/students" class="btn">Повернутись назад</a>
+    <a href="/students" class="btn btn-del">Повернутись назад</a>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    function toggleCompleteReminder(studentId, reminderId, isCompleted) {
+      isCompleted = (isCompleted === 'true'); // Convert string back to boolean
+      fetch(`/students/${studentId}/reminders/${reminderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isCompleted: !isCompleted }),
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to update reminder status');
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    function deleteReminder(studentId, reminderId) {
+      fetch(`/students/${studentId}/reminders/${reminderId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => {
+
+          window.location.reload();
+   
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
 </body>
 </html>

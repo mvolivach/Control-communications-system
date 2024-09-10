@@ -11,7 +11,7 @@
     <ul class="list-unstyled">
       <% if (students.length) { %>
         <% students.forEach(({ _id, surname, createdAt, name, patronymic, phone, email, group, course, certifications, isArchived }) => { %>
-          <li class="card mb-3">
+          <li >
             <div class="cont">
               <h5 class="card-title">
                 <a href="/students/<%= _id %>" class="text-decoration-none"><%= surname %> <%= name %> <%= patronymic %></a>
