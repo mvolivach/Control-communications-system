@@ -1,39 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-  <%- include('./partials/head.ejs') %>
-<body>
-  <%- include('./partials/nav.ejs') %>
-  <form id="post-form" method="post" action="/edit/<%= student.id %>?_method=PUT">
-    <div class="form-info">
-      <label>Прізвище
-        <input type="text" name="surname" value="<%= student.surname %>">
-      </label>
-      <label>По-батькові
-        <input type="text" name="patronymic" value="<%= student.patronymic %>">
-      </label>
-      <label>Ім'я
-        <input type="text" name="name" value="<%= student.name %>">
-      </label>
-      <label>Номер телефону 
-        <input type="text" name="phone" value="<%= student.phone %>">
-      </label>
-      <label>Електронна пошта
-        <input type="text" name="email" value="<%= student.email %>">
-      </label>
-      <label>Група 
-        <input type="text" name="group" value="<%= student.group %>">
-      </label>
-      <label>Курс 
-        <input type="text" name="course" value="<%= student.course %>">
-      </label>
-      <label>Кількість атестацій за семестр 
-        <input type="text" name="certifications" value="<%= student.certifications %>">
-      </label>
-      
+  <head>
+    <%- include('./partials/head.ejs') %>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <%- include('./partials/nav.ejs') %>
+    <div class="container mt-5">
+      <h1>Редагувати інформацію студента:</h1>
+      <form id="post-form" method="post" action="/edit/<%= student.id %>?_method=PUT" class="row g-1" style="background-color: white; padding: 20px; border-radius: 10px;">
+        
+        <label for="surname" class="form-label">Прізвище</label>
+        <div class="col-md-12">
+          
+          <input type="text" class="form-control" id="surname" name="surname" value="<%= student.surname %>" required>
+        </div>
+        <label for="patronymic" class="form-label">По-батькові</label>
+        <div class="col-md-12">
+          
+          <input type="text" class="form-control" id="patronymic" name="patronymic" value="<%= student.patronymic %>" required>
+        </div>
+        <label for="name" class="form-label">Ім'я</label>
+        <div class="col-md-12">
+          
+          <input type="text" class="form-control" id="name" name="name" value="<%= student.name %>" required>
+        </div>
+        <label for="phone" class="form-label">Номер телефону</label>
+        <div class="col-md-12">
+          
+          <input type="text" class="form-control" id="phone" name="phone" value="<%= student.phone %>" required>
+        </div>
+        <label for="email" class="form-label">Електронна пошта</label>
+        <div class="col-md-12">
+          
+          <input type="email" class="form-control" id="email" name="email" value="<%= student.email %>" required>
+        </div>
+        <label for="group" class="form-label">Група</label>
+        <div class="col-md-12">
+          
+          <input type="text" class="form-control" id="group" name="group" value="<%= student.group %>" required>
+        </div>
+        <label for="course" class="form-label">Курс</label>
+        <div class="col-md-12">
+          
+          <input type="text" class="form-control" id="course" name="course" value="<%= student.course %>" required>
+        </div>
+        <label for="certifications" class="form-label">Кількість атестацій за семестр</label>
+        <div class="col-md-12">
+          
+          <input type="number" class="form-control" id="certifications" name="certifications" value="<%= student.certifications %>" required>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+        </div>
+      </form>
     </div>
-    <div class="form-button">
-      <input type="submit" value="Submit">
-    </div>
-  </form>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>

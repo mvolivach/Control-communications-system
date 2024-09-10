@@ -8,36 +8,26 @@ const path = require('path');
 const fs = require('fs').promises;
 const studentRoutes = require('./routes/student-routes');
 const createPath = require('./helpers/create-path');
+const authRoutes = require('./routes/authRoutes');
+const cookieParser = require('cookie-parser');
+const { requireAuth, checkUser } = require('./middleware/authMiddleware');
 
 const app = express();
-
+app.use(express.static('public'));
+app.use(express.json());
 app.get('/telegram', (req, res) => {
-  res.render('telegram'); // Make sure the view 'telegram' is correctly pointing to your 'telegram.ejs'
+    res.render('telegram');
 });
 
+app.use(cookieParser());
 const multer = require('multer');
 const cheerio = require('cheerio');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-app.use(express.static('public')); // Serve static files
+app.use(express.static('public'));
 
-app.post('/upload', upload.single('htmlFile'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
-    const data = req.file.buffer.toString('utf8');
-    const $ = cheerio.load(data);
-    const messages = [];
-    $('.message').each((i, elem) => {
-        const fromName = $(elem).find('.from_name').text().trim();
-        const date = $(elem).find('.pull_right.date.details').attr('title');
-        const text = $(elem).find('.text').text().trim();
-        messages.push({ fromName, date, text });
-    });
-    res.json(messages);
-});
 
 app.set('view engine', 'ejs');
 
@@ -45,7 +35,7 @@ const PORT = 3000;
 const db = 'mongodb+srv://Maksym:volivach@cluster0.ad7qpyj.mongodb.net/?retryWrites=true&w=majority';
 
 mongoose
-  .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(db, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
   .then((res) => console.log('Connected to DB'))
   .catch((error) => console.log(error));
 
@@ -53,10 +43,18 @@ app.listen(PORT, (error) => {
   error ? console.log(error) : console.log(`listening port ${PORT}`);
 });
 
+
+
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 app.use(express.static('styles'));
 app.use(methodOverride('_method'));
+
+app.get('*', checkUser);
+app.get('/', (req, res) => res.render('index'));
+app.use(authRoutes);
+
+
 
 // Google API Setup
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -125,6 +123,67 @@ app.get('/emails', async (req, res) => {
     res.send('Failed to retrieve email history.');
   }
 });
+
+
+const File = require('./models/file.js');
+app.post('/upload', upload.single('htmlFile'), async (req, res) => {
+  const studentId = req.query.studentId;
+  
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  if (!studentId) {
+    return res.status(400).send('Student ID is required.');
+  }
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).send('Invalid student ID.');
+    }
+
+    const newFile = new File({
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+      data: req.file.buffer,
+      studentId: studentId 
+    });
+
+    const savedFile = await newFile.save();
+    res.redirect(`/files/${savedFile._id}`);
+  } catch (error) {
+    res.status(500).send('Error saving file to database');
+  }
+});
+
+
+app.get('/telegram/:studentId', async (req, res) => {
+  let messages = [];
+  let error = null;
+
+  try {
+    const file = await File.findOne({ studentId: req.params.studentId });
+    if (!file) {
+      throw new Error('File not found for the provided student ID');
+    }
+
+    const fileContent = file.data.toString('utf8');
+    const $ = cheerio.load(fileContent);
+
+    $('.message.default.clearfix').each((i, elem) => {
+      const fromName = $(elem).find('.from_name').text().trim();
+      const date = $(elem).find('.date.details').attr('title').split(' ')[0];
+      const text = $(elem).find('.text').html();
+      messages.push({ fromName, date, text });
+    });
+  } catch (err) {
+    console.error('Failed to retrieve file:', err);
+    error = err.message;
+  }
+
+  res.render('telegram', { messages, error });
+});
+
 
 app.get('/', (req, res) => {
   const title = 'Home';

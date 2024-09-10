@@ -1,8 +1,25 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
 <nav>
-  <ul>
-    <li><a href="/">На головний екран</a></li>
-    <li><a href="/students">Студенти</a></li>
-    <li><a href="/add-student">Додати студента</a></li>
-    <li><a href="/contacts">Контакти</a></li>
+  <ul class="nav-left">
+    <% if (user) { %>
+    <li><a href="/" class="btn" >На головний екран</a></li>
+    <li><a href="/students" class="btn">Студенти</a></li>
+    <li><a href="/add-student" class="btn">Додати студента</a></li>
+    <li><a href="/contacts" class="btn">Контакти</a></li>
+  </ul>
+  <ul class="nav-right">
+      <li><%= user.email %></li>
+      <li><a href="/logout" class="btn">Вийти з акаунта</a></li>
+    <% } else { %>
+      <li><a href="/login" class="btn">Увійти</a></li>
+      <li><a href="/signup" class="btn">Зареєструватися</a></li>
+    <% } %>
   </ul>
 </nav>
