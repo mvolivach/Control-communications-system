@@ -43,7 +43,7 @@ const editStudent = (req, res) => {
 const getStudents = (req, res) => {
   const title = 'Students';
   Student
-    .find()
+    .find({ isArchived: false })
     .sort({ createdAt: -1 })
     .then(students => res.render(createPath('students'), { students, title }))
     .catch((error) => handleError(res, error));
@@ -63,6 +63,27 @@ const addStudent = (req, res) => {
     .catch((error) => handleError(res, error));
 }
 
+const toggleArchiveStudent = (req, res) => {
+  const { id } = req.params;
+  Student.findById(id)
+    .then(student => {
+      student.isArchived = !student.isArchived;
+      student.save()
+        .then(() => res.redirect('/students'))
+        .catch(error => handleError(res, error));
+    })
+    .catch((error) => handleError(res, error));
+}
+
+const getArchivedStudents = (req, res) => {
+  const title = 'Archived Students';
+  Student.find({ isArchived: true })
+    .sort({ createdAt: -1 })
+    .then(students => res.render(createPath('archived'), { students, title }))  
+    .catch((error) => handleError(res, error));
+}
+
+
 module.exports = {
   getStudent,
   deleteStudent,
@@ -71,4 +92,6 @@ module.exports = {
   getStudents,
   getAddStudent,
   addStudent,
+  toggleArchiveStudent,
+  getArchivedStudents,
 };

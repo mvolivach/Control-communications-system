@@ -35,7 +35,7 @@
             font-size: 0.9rem;
         }
         #messagesContainer {
-            display: none; /* Initially hide the messages container */
+            display: none; 
         }
         .chat-container {
     max-width: 600px;
@@ -93,10 +93,9 @@
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const fileInput = document.getElementById('fileInput');
-    
-            // Отримання частини шляху URL та виокремлення studentId
+
             const pathArray = window.location.pathname.split('/');
-            const studentId = pathArray[pathArray.length - 1]; // Останній елемент в масиві
+            const studentId = pathArray[pathArray.length - 1]; 
     
             const formData = new FormData();
             formData.append('htmlFile', fileInput.files[0]);
@@ -109,7 +108,7 @@
             .then(data => {
                 const container = document.getElementById('messagesContainer');
                 const historyHeader = document.getElementById('historyHeader');
-                container.innerHTML = ''; // Очистка попередніх повідомлень
+                container.innerHTML = ''; 
                 data.forEach(msg => {
                     const messageElement = document.createElement('div');
                     messageElement.className = 'message';
@@ -119,7 +118,7 @@
                         <div class="text">${msg.text}</div>`;
                     container.appendChild(messageElement);
                 });
-                // Показувати контейнер повідомлень та заголовок історії
+
                 container.style.display = 'block';
                 historyHeader.style.display = 'block';
             })

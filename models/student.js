@@ -33,6 +33,10 @@ const studentSchema = new Schema({
   certifications: {
     type: String,
     required: true,
+  },
+  isArchived: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

@@ -18,7 +18,7 @@ const audioFileSchema = new mongoose.Schema({
     ref: 'Student'
   },
   transcription: String
-});
+}, { timestamps: true });;
 
 const AudioFile = mongoose.model('AudioFile', audioFileSchema);
 

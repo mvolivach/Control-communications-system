@@ -1,44 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-
-
-  
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="/styles.css">
-  </head>
+<head>
+  <title>Document</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
 <body>
   <%- include('./partials/nav.ejs') %>
   <div class="container mt-5">
     <h1>Студенти:</h1>
     <ul class="list-unstyled">
       <% if (students.length) { %>
-        <% students.forEach(({ id, surname, createdAt, name, patronymic , phone, email, group, course, certifications }) => { %>
+        <% students.forEach(({ _id, surname, createdAt, name, patronymic, phone, email, group, course, certifications, isArchived }) => { %>
           <li class="card mb-3">
             <div class="cont">
               <h5 class="card-title">
-                <a href="/students/<%= id %>" class="text-decoration-none"><%= surname %> <%= name %> <%= patronymic %></a>
-              </h5>           
+                <a href="/students/<%= _id %>" class="text-decoration-none"><%= surname %> <%= name %> <%= patronymic %></a>
+              </h5>
               <p class="card-text"><strong>Номер телефону:</strong> <%= phone %></p>
               <p class="card-text"><strong>Email:</strong> <%= email %></p>
               <p class="card-text"><strong>Група:</strong> <%= group %></p>
               <p class="card-text"><strong>Курс:</strong> <%= course %></p>
               <p class="card-text"><strong>Кількість н/а за семестр:</strong> <%= certifications %></p>
               <div class="info"><span>Додано: <%= new Date(createdAt).toLocaleDateString() %></span></div>
-              <div >
                 
-                <button class="btn btn-del" data-id="<%= id %>">
+                
+                <button class="btn btn-del" data-id="<%= _id %>">
                   Видалити
                 </button>
-                <button onclick="toggleArchive('<%= id %>')" class="btn btn-del">Архівувати</button>
+                  <button onclick="toggleArchive('<%= _id %>')" class="btn btn-del">Розархівувати</button>               
               </div>
             </div>
           </li>
         <% }) %>
       <% } else { %>
-        <li>Студентів не знайдено</li>
+        <li>Жодний запис не архівовано</li>
       <% } %>
     </ul>
   </div>
@@ -47,22 +42,23 @@
     document.addEventListener('click', (e) => {
       const id = e.target?.dataset?.id || null;
       if (id && e.target.matches('.btn-delete, .btn-delete *')) {
-        fetch(`/students/${id}`, {
-          method: 'DELETE',
-        }).then(() => {
-          window.location.reload();
-        }).catch((err) => {
-          console.error('Помилка видалення студента:', err);
-        });
+        if (confirm('Are you sure you want to delete this student permanently?')) {
+          fetch(`/students/${id}`, {
+            method: 'DELETE'
+          }).then(() => {
+            window.location.reload();
+          }).catch(err => console.error('Error deleting student:', err));
+        }
       }
     });
+
     function toggleArchive(id) {
-  fetch(`/students/toggle-archive/${id}`, {
-    method: 'POST'
-  }).then(() => {
-    window.location.reload();
-  }).catch(err => console.error('Error toggling archive status:', err));
-}
+      fetch(`/students/toggle-archive/${id}`, {
+        method: 'POST'
+      }).then(() => {
+        window.location.reload();
+      }).catch(err => console.error('Error toggling archive status:', err));
+    }
   </script>
 </body>
 </html>

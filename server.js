@@ -28,7 +28,7 @@ const cheerio = require('cheerio');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-app.use(express.static('public')); // Serve static files
+app.use(express.static('public'));
 
 
 app.set('view engine', 'ejs');
@@ -55,6 +55,7 @@ app.use(methodOverride('_method'));
 app.get('*', checkUser);
 app.get('/', (req, res) => res.render('index'));
 app.use(authRoutes);
+
 
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -125,10 +126,9 @@ app.get('/emails', async (req, res) => {
 });
 
 
-const File = require('./models/file.js'); 
+const File = require('./models/file.js');
 
 app.post('/upload', upload.single('htmlFile'), async (req, res) => {
-
   const studentId = req.query.studentId;
   
   if (!req.file) {
@@ -140,19 +140,16 @@ app.post('/upload', upload.single('htmlFile'), async (req, res) => {
   }
 
   try {
-
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
       return res.status(400).send('Invalid student ID.');
     }
-
 
     const newFile = new File({
       filename: req.file.originalname,
       contentType: req.file.mimetype,
       data: req.file.buffer,
-      studentId: studentId  
+      studentId: studentId 
     });
-
 
     const savedFile = await newFile.save();
 
@@ -164,11 +161,10 @@ app.post('/upload', upload.single('htmlFile'), async (req, res) => {
 
 
 app.get('/telegram/:studentId', async (req, res) => {
-  let messages = []; 
+  let messages = [];
   let error = null;
 
   try {
-
     const file = await File.findOne({ studentId: req.params.studentId });
     if (!file) {
       throw new Error('File not found for the provided student ID');
@@ -193,12 +189,11 @@ app.get('/telegram/:studentId', async (req, res) => {
 app.use(studentRoutes);
 
 const AudioFile = require('./models/audioFile');
-
 const audioStorage = multer.memoryStorage();
 const audioUpload = multer({
   storage: audioStorage,
   fileFilter: (req, file, cb) => {
-
+    // Accept audio files only
     if (file.mimetype.startsWith('audio/')) {
       cb(null, true);
     } else {
@@ -214,8 +209,9 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
   const studentId = req.params.studentId;
 
   if (!req.file) {
-    return res.status(400).render('audio', { message: 'No audio file uploaded.', audioId: null, studentId: studentId });
+    return res.status(400).render('audio', { message: 'Не завантажено жодного аудіо!', audioId: null, studentId: studentId });
   }
+
 
   const client = new speech.SpeechClient();
 
@@ -226,7 +222,7 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
     };
     const config = {
       encoding: 'LINEAR16',  
-      sampleRateHertz: 16000, 
+      sampleRateHertz: 16000,  
       languageCode: 'uk-UA',
       enableAutomaticPunctuation: true,
     };
@@ -234,6 +230,7 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
       audio: audio,
       config: config,
     };
+
 
     const [response] = await client.recognize(request);
     const transcription = response.results
@@ -245,30 +242,35 @@ app.post('/upload-audio/:studentId', audioUpload.single('audioFile'), async (req
       contentType: req.file.mimetype,
       data: req.file.buffer,
       studentId: studentId,
-      transcription: transcription  
+      transcription: transcription 
     });
-    const savedFile = await newAudioFile.save();
 
-    res.render('audio', { message: 'Audio file uploaded and transcribed successfully!', audioId: savedFile._id, studentId: studentId });
+    await newAudioFile.save();
+
+
+    res.redirect(`/audioVoice/${studentId}`);
   } catch (error) {
     console.error('Failed to save audio file or transcribe:', error);
     res.status(500).render('audio', { message: 'Error uploading audio file: ' + error.message, audioId: null, studentId: studentId });
   }
 });
 
-app.get('/audio/student/:studentId', async (req, res) => {
+app.get('/audio/:audioId', async (req, res) => {
   try {
-    const studentId = req.params.studentId;
-    const audioFile = await AudioFile.findOne({ studentId: studentId });
+    const audioId = req.params.audioId;
+
+    const audioFile = await AudioFile.findById(audioId);
+
     if (!audioFile) {
       return res.status(404).send('Audio file not found.');
     }
 
+
     res.set('Content-Type', audioFile.contentType);
     res.send(audioFile.data);
   } catch (error) {
-    console.error('Failed to retrieve audio file:', error);
-    res.status(500).send('Error retrieving audio file.');
+    console.error('Failed to retrieve the audio file:', error);
+    res.status(500).send('Error retrieving the audio file.');
   }
 });
 
@@ -279,33 +281,48 @@ app.get('/audioVoice/:studentId', async (req, res) => {
 
   try {
 
-    const audioFile = await AudioFile.findOne({ studentId: studentId });
-    if (!audioFile) {
+    const audioFiles = await AudioFile.find({ studentId: studentId });
+    if (!audioFiles.length) {
 
       return res.render('audioVoice', {
         studentId: studentId,
-        message: 'Audio file not found.',
-        transcription: 'No transcription available.' 
+        audios: [],
+        message: 'No audio files found.'
       });
     }
 
-
     res.render('audioVoice', {
       studentId: studentId,
-      transcription: audioFile.transcription || 'No transcription available.', 
-      message: 'Audio file loaded.'
+      audios: audioFiles,
+      message: 'Audio files loaded.'
     });
 
   } catch (error) {
-    console.error('Error retrieving audio file:', error);
-
+    console.error('Error retrieving audio files:', error);
     res.render('audioVoice', {
       studentId: studentId,
-      message: 'Error retrieving audio file.',
-      transcription: 'Failed to retrieve transcription.'
+      audios: [],
+      message: 'Error retrieving audio files.'
     });
   }
 });
+
+app.delete('/audio/:audioId', async (req, res) => {
+  try {
+    const audioId = req.params.audioId;
+    const deletedAudio = await AudioFile.findByIdAndDelete(audioId);
+
+    if (!deletedAudio) {
+      return res.status(404).send({ message: 'Audio file not found.' });
+    }
+
+    res.send({ message: 'Audio file deleted successfully.' });
+  } catch (error) {
+    console.error('Failed to delete the audio file:', error);
+    res.status(500).send({ message: 'Error deleting the audio file.' });
+  }
+});
+
 
 const speech = require('@google-cloud/speech');
 
