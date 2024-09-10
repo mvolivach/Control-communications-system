@@ -32,39 +32,37 @@ const getStudent = async (req, res) => {
       ...message
     })) : [];
 
-
-    const files = await File.find({ studentId: req.params.id });
+const files = await File.find({ studentId: req.params.id });
 const telegramMessages = [];
-const uniqueMessages = new Set(); // Створення множини для зберігання унікальних ідентифікаторів повідомлень
+const uniqueMessages = new Set(); 
 
 files.forEach(file => {
-  if (file.fileType === 'html' && path.extname(file.filename).toLowerCase() === '.html') {
+  if (file.fileType === 'json' && path.extname(file.filename).toLowerCase() === '.json') {
     const fileContent = file.data.toString('utf8');
-    const $ = cheerio.load(fileContent);
+    const jsonData = JSON.parse(fileContent);
 
-    $('.message.default.clearfix').each((i, elem) => {
-      const fromName = $(elem).find('.from_name').text().trim();
-      const dateTime = $(elem).find('.date.details').attr('title').split(' ');
-      const date = dateTime[0]; 
-      const time = dateTime[1]; 
-      const text = $(elem).find('.text').html();
+    jsonData.messages.forEach(message => {
+      const fromName = message.from;
+      const dateTime = new Date(message.date).toISOString().split('T');
+      const date = dateTime[0];
+      const time = dateTime[1].split('.')[0];
+      const text = message.text || '';
       let photos = [];
 
-      $(elem).find('.media_wrap .photo_wrap').each((i, photoElem) => {
-        const photoSrc = $(photoElem).find('img').attr('src');
-        const photoFile = files.find(f => f.filename === path.basename(photoSrc));
+      if (message.photo) {
+        const photoFile = files.find(f => f.filename === path.basename(message.photo));
         if (photoFile) {
           photos.push({ src: `/photos/${photoFile._id}`, href: `/photos/${photoFile._id}` });
         }
-      });
+      }
 
-      const messageSignature = `${fromName}-${date}-${time}-${text}`; 
+      const messageSignature = `${fromName}-${date}-${time}-${text}`;
 
       if (!uniqueMessages.has(messageSignature)) {
         uniqueMessages.add(messageSignature);
         telegramMessages.push({
           type: 'telegram',
-          date: new Date(`${date.split('.').reverse().join('-')}T${time}`),
+          date: new Date(`${date}T${time}`),
           fromName,
           text,
           photos

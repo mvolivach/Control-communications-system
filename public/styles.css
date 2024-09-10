@@ -407,6 +407,10 @@ nav ul.nav-right {
   margin-bottom: 10px;
 }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> eb269879d372ca08832a2fd156a9b46a0cb26906
 .chat-container {
   max-width: 800px;
   margin: 20px auto;
@@ -552,10 +556,22 @@ width: 100%;
 
 .email-item, .telegram-item, .audio-item {
   border-bottom: 1px solid #ddd;
+<<<<<<< HEAD
+  padding: 10px 0;
+=======
   padding: 10px 10px;
+>>>>>>> eb269879d372ca08832a2fd156a9b46a0cb26906
 }
 
 .email-content, .telegram-content, .audio-content {
   display: flex;
   flex-direction: column;
 }
+<<<<<<< HEAD
+
+.attachments img {
+  max-width: 100px;
+  margin-right: 5px;
+}
+=======
+>>>>>>> eb269879d372ca08832a2fd156a9b46a0cb26906
