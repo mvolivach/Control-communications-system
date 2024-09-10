@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('./partials/head.ejs') %>
+<body>
+  <%- include('./partials/nav.ejs') %>
+  <article class="post">
+    <div class="info">
+      <span><%= student.createdAt.toLocaleDateString() || 'No date' %></span>
+      <span><%= student.patronymic %></span>
+    </div>
+    <h1><%= student.surname %></h1>
+    <p><%= student.name %></p>
+    <p><%= student.phone %></p>
+    <p><%= student.email %></p>
+    <p><%= student.group %></p>
+    <p><%= student.course %></p>
+    <p><%= student.certifications %></p>
+    <a href="/edit/<%= student.id %>" class="btn-edit">
+      <i class="fas fa-edit"></i>
+    </a>
+    <button class="btn-delete" data-id="<%= student.id %>">
+      <i class="fas fa-trash-alt" data-id="<%= student.id %>"></i>
+    </button>
+  </article>
+
+  <script>
+    document.addEventListener('click', (e) => {
+      const id = e.target?.dataset?.id || null;
+      if (id) {
+        fetch(`/students/${id}`, {
+          method: 'DELETE',
+        }).then(() => {
+          window.location.href = '/students';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

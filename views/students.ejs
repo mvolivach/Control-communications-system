@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('./partials/head.ejs') %>
+<body>
+  <%- include('./partials/nav.ejs') %>
+  <h1>Students:</h1>
+  <ul>
+    <% if (students.length) { %>
+      <% students.forEach(({ id, surname, createdAt, name, patronymic , phone, email, group, course, certifications }) => { %>
+        <article>
+          <h2>
+            <a href="/students/<%= id %>"><%= surname %></a>
+          </h2>
+          <p><%= name %></p>
+          <p><%= phone %></p>
+          <p><%= email %></p>
+          <p><%= group %></p>
+          <p><%= course %></p>
+          <p><%= certifications %></p>
+          <div class="info">
+            <span><%= createdAt.toLocaleDateString() %></span>
+            <span><%= patronymic %></span>
+          </div>
+          <button class="btn-delete" data-id="<%= id %>">
+            <i class="fas fa-trash-alt" data-id="<%= id %>"></i>
+          </button>
+        </article>
+      <% }) %>
+    <% } %>
+  </ul>
+  <script>
+    document.addEventListener('click', (e) => {
+      const id = e.target?.dataset?.id || null;
+      if (id) {
+        fetch(`/students/${id}`, {
+          method: 'DELETE',
+        }).then(() => {
+          window.location.reload();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
