@@ -1,41 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
   <%- include('./partials/head.ejs') %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: gray;
+    }
+    .btn-delete {
+      color: #f44336;
+      border: none;
+      background: none;
+    }
+  </style>
 <body>
   <%- include('./partials/nav.ejs') %>
-  <h1>Students:</h1>
-  <ul>
-    <% if (students.length) { %>
-      <% students.forEach(({ id, surname, createdAt, name, patronymic , phone, email, group, course, certifications }) => { %>
-        <article>
-          <h2>
-            <a href="/students/<%= id %>"><%= surname %></a>
-          </h2>
-          <p><%= name %></p>
-          <p><%= phone %></p>
-          <p><%= email %></p>
-          <p><%= group %></p>
-          <p><%= course %></p>
-          <p><%= certifications %></p>
-          <div class="info">
-            <span><%= createdAt.toLocaleDateString() %></span>
-            <span><%= patronymic %></span>
-          </div>
-          <button class="btn-delete" data-id="<%= id %>">
-            <i class="fas fa-trash-alt" data-id="<%= id %>"></i>
-          </button>
-        </article>
-      <% }) %>
-    <% } %>
-  </ul>
+  <div class="container mt-5">
+    <h1>Студенти:</h1>
+    <ul class="list-unstyled">
+      <% if (students.length) { %>
+        <% students.forEach(({ id, surname, createdAt, name, patronymic , phone, email, group, course, certifications }) => { %>
+          <li class="card mb-3">
+            <div class="card-body">
+              <h5 class="card-title">
+                <a href="/students/<%= id %>" class="text-decoration-none"><%= surname %> <%= name %> <%= patronymic %></a>
+              </h5>           
+              <p class="card-text"><strong>Номер телефону:</strong> <%= phone %></p>
+              <p class="card-text"><strong>Email:</strong> <%= email %></p>
+              <p class="card-text"><strong>Група:</strong> <%= group %></p>
+              <p class="card-text"><strong>Курс:</strong> <%= course %></p>
+              <p class="card-text"><strong>Кількість н/а за семестр:</strong> <%= certifications %></p>
+              <div class="info">
+                <span>Додано: <%= createdAt.toLocaleDateString() %></span>
+                <button class="btn btn-delete" data-id="<%= id %>">
+                  <i class="fas fa-trash-alt" data-id="<%= id %>"></i>
+                </button>
+              </div>
+            </div>
+          </li>
+        <% }) %>
+      <% } else { %>
+        <li>Студентів не знайдено</li>
+      <% } %>
+    </ul>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener('click', (e) => {
       const id = e.target?.dataset?.id || null;
-      if (id) {
+      if (id && e.target.matches('.btn-delete, .btn-delete *')) {
         fetch(`/students/${id}`, {
           method: 'DELETE',
         }).then(() => {
           window.location.reload();
+        }).catch((err) => {
+          console.error('Помилка видалення студента:', err);
         });
       }
     });

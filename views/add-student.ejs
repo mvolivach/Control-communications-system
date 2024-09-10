@@ -1,39 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
   <%- include('./partials/head.ejs') %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <body>
   <%- include('./partials/nav.ejs') %>
-  <form id="post-form" method="post" action="/add-student">
-    <div class="form-info">
-      <label>Прізвище
-        <input type="text" name="surname">
-      </label>
-      <label>По-батькові
-        <input type="text" name="patronymic">
-      </label>
-      <label>Ім'я
-        <input type="text" name="name">
-      </label>
-      <label>Номер телефону
-        <input type="text" name="phone">
-      </label>
-      <label>Електронна адреса
-        <input type="text" name="email">
-      </label>
-      <label>Група
-        <input type="text" name="group">
-      </label>
-      <label>Курс
-        <input type="text" name="course">
-      </label>
-      <label>Кількість атестацій за семестр
-        <input type="text" name="certifications">
-      </label>
-
-    
-    <div class="form-button">
-      <input type="submit" value="Submit">
-    </div>
-  </form>
+  <div class="container mt-5">
+    <h1>Додати студента:</h1>
+    <form id="post-form" method="post" action="/add-student" class="row g-1" style="background-color: white; padding: 20px; border-radius: 10px;">
+      <label for="surname" class="form-label">Прізвище</label>
+      <div class="col-md-12">
+        
+        <input type="text" class="form-control" id="surname" name="surname" required>
+      </div>
+      <label for="patronymic" class="form-label">По-батькові</label>
+      <div class="col-md-12">
+        
+        <input type="text" class="form-control" id="patronymic" name="patronymic" required>
+      </div>
+      <label for="name" class="form-label">Ім'я</label>
+      <div class="col-md-12">
+        
+        <input type="text" class="form-control" id="name" name="name" required>
+      </div>
+      <label for="phone" class="form-label">Номер телефону</label>
+      <div class="col-md-12">
+        
+        <input type="text" class="form-control" id="phone" name="phone" required>
+      </div>
+      <label for="email" class="form-label">Електронна адреса</label>
+      <div class="col-md-12">
+        
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+      <label for="group" class="form-label">Група</label>
+      <div class="col-md-12">
+        
+        <input type="text" class="form-control" id="group" name="group" required>
+      </div>
+      <label for="course" class="form-label">Курс</label>
+      <div class="col-md-12">
+        
+        <input type="text" class="form-control" id="course" name="course" required>
+      </div>
+      <label for="certifications" class="form-label">Кількість атестацій за семестр</label>
+      <div class="col-md-12">
+        
+        <input type="number" class="form-control" id="certifications" name="certifications" required>
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

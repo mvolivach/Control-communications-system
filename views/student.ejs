@@ -1,39 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
   <%- include('./partials/head.ejs') %>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <body>
   <%- include('./partials/nav.ejs') %>
-  <article class="post">
-    <div class="info">
-      <span><%= student.createdAt.toLocaleDateString() || 'No date' %></span>
-      <span><%= student.patronymic %></span>
-    </div>
-    <h1><%= student.surname %></h1>
-    <p><%= student.name %></p>
-    <p><%= student.phone %></p>
-    <p><%= student.email %></p>
-    <p><%= student.group %></p>
-    <p><%= student.course %></p>
-    <p><%= student.certifications %></p>
-    <a href="/edit/<%= student.id %>" class="btn-edit">
-      <i class="fas fa-edit"></i>
-    </a>
-    <button class="btn-delete" data-id="<%= student.id %>">
-      <i class="fas fa-trash-alt" data-id="<%= student.id %>"></i>
-    </button>
-  </article>
+  <div class="container mt-5">
+    <article class="post card">
+      <div class="card-body">
+        <div class="info mb-4">
+          <h4 class="card-title">Студент: <%= student.surname %> <%= student.name %> <%= student.patronymic %></h4>
+          <h6 class="card-subtitle mb-2 text-muted"><span><%= student.createdAt.toLocaleDateString() || 'No date' %></span></h6>
+        </div>
+        <p><strong>Номер телефону:</strong> <%= student.phone %></p>
+        <p><strong>Email:</strong> <%= student.email %></p>
+        <p><strong>Група:</strong> <%= student.group %></p>
+        <p><strong>Курс:</strong> <%= student.course %></p>
+        <p><strong>Кількість н/a за семестр:</strong> <%= student.certifications %></p>
+        <div class="btn-group" role="group" aria-label="Student actions">
+          <a href="/edit/<%= student.id %>" class="btn btn-secondary">
+            <i class="fas fa-edit"></i> Редагувати
+          </a>
+          <button class="btn btn-danger" onclick="deleteStudent('<%= student.id %>')">
+            <i class="fas fa-trash-alt"></i> Видалити
+          </button>
+          <button onclick="fetchEmail('<%= student.email %>')" class="btn btn-info">
+            <i class="fas fa-envelope"></i> Переглянути історію комунікацій через Gmail
+          </button>
+          <a href="/telegram" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> Переглянути історію комунікацій у Telegram
+          </a>
+        </div>
+      </div>
+    </article>
+  </div>
 
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script>
     document.addEventListener('click', (e) => {
-      const id = e.target?.dataset?.id || null;
-      if (id) {
-        fetch(`/students/${id}`, {
-          method: 'DELETE',
-        }).then(() => {
-          window.location.href = '/students';
-        });
+      if (e.target.dataset.id && e.target.closest('.btn-danger')) {
+        deleteStudent(e.target.dataset.id);
       }
     });
+
+    function deleteStudent(id) {
+      fetch(`/students/${id}`, { method: 'DELETE' })
+        .then(() => { window.location.href = '/students'; })
+        .catch(err => console.error('Error:', err));
+    }
+
+    function fetchEmail(email) {
+      window.location.href = `/emails?email=${email}`;
+    }
   </script>
 </body>
 </html>
